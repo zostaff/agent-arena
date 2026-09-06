@@ -1,6 +1,6 @@
 # 09 — Tests (`tests/`, vitest)
 
-`npm test` — 133 tests, ~1s.
+`npm test` — 142 tests, ~1s.
 
 | File | Covers |
 |---|---|
@@ -9,6 +9,7 @@
 | `brain.test.ts` | verdict clamping after parse, fence stripping, SELL→SKIP with no position, SKIP on parse failure / bad status / timeout / transport error / empty content / refusal / missing key, 429 retry, pinned headers and endpoint, `system` kept out of `messages`, no `temperature` on Opus 5 and Fable 5.1, no `budget_tokens` |
 | `providers.test.ts` | the three ladders and their prices, PTN 12 unlock on each, cost spread across houses, config identical except model and price, OpenAI body (no sampling params, `reasoning.effort`, `store:false`) and xAI body (`temperature: 0`, `reasoning_effort`, `max_completion_tokens`), text extraction and refusal detection per house, degrade-once on a rejected parameter, every failure path to SKIP, router dispatch and fallback, REWIRE cost and refusals |
 | `net.test.ts` | net = gross − spend at `ASSUMED_ETH_USD` exactly, the bill priced at the house's own rate, gross/trades/decisions/equity identical across houses, `netByHouse` from one run matching real runs on each house, baseline run on the same house, verdict reading off the net delta |
+| `save.test.ts` | round trip of treasury, buildings, jobs, boosts, stats, level, XP, house and record; save→restore→save stability; open positions dropped and unrealised P&L not banked; version refusal; junk of every shape refused; a hostile save clamped field by field; a missing building refilled to its default |
 | `determinism.test.ts` | 10 000-tick sim on seed 42 identical across two runs, divergence on a different seed, identical candles, identical FORGE backtest |
 | `village.test.ts` | upgrade costs and times, construction, RUSH pricing, treasury refusals, boost prices and expiry, passive yield, MINT cut, custom deploy cap, full state-machine traversal, XP curve |
 | `market.test.ts` | mulberry32, candle aggregation, momentum / volatility / imbalance / spread, `fillPrice` book walking, sim market shape and long-run sanity, isometric projection and depth sort |

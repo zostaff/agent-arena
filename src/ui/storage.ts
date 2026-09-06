@@ -14,6 +14,8 @@ import type { StrategyParams, Provider } from "../core/types.js";
    comparable, so they are left behind rather than migrated. */
 export const BOARD_KEY = "dv_board_v2";
 export const ME_KEY = "dv_me";
+/** The player's own village. Unshared: nobody else's browser needs it. */
+export const VILLAGE_KEY = "dv_village_v1";
 
 interface HostStorage {
   get(key: string, options?: { shared?: boolean }): Promise<unknown>;
@@ -131,6 +133,23 @@ export async function loadMe(): Promise<Me> {
     await writeKey(ME_KEY, me, false);
   }
   return me;
+}
+
+/**
+ * The village survives a reload. Reading returns whatever is on disk; the
+ * engine's `parseSave` decides whether it is usable, because validation
+ * belongs next to the invariants and not next to the storage adapter.
+ */
+export async function loadVillageSave(): Promise<unknown> {
+  return readKey<unknown>(VILLAGE_KEY, false, null);
+}
+
+export async function saveVillage(save: unknown): Promise<void> {
+  await writeKey(VILLAGE_KEY, save, false);
+}
+
+export async function clearVillageSave(): Promise<void> {
+  await writeKey(VILLAGE_KEY, null, false);
 }
 
 export async function saveMe(me: Me): Promise<void> {

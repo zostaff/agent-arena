@@ -57,6 +57,8 @@ in the browser, and what makes a backtest and a live session comparable.
 | `src/live/brain.ts` | Anthropic Messages API, never throws out of `decide()` |
 | `src/live/execute.ts` | viem, chain 4663, Pons router, `dryRun: true` by default |
 | `src/ui/*` | isometric SVG renderer, HUD, REWIRE panel, DEX overlay, FORGE, leaderboard |
+| `src/ui/ErrorBoundary.tsx` | the last line of defence: a crash shows what broke and offers to wipe the save |
+| `.github/workflows/*` | `ci.yml` typechecks, tests and builds; `pages.yml` publishes the village |
 | `assets/banner.svg` | README banner, source of truth; `banner.png` is rendered from it |
 | `src/run.ts` | node entry, `MODE` switches sim/live |
 

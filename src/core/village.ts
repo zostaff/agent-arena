@@ -14,7 +14,13 @@ import type {
   Verdict,
 } from "./types.js";
 import type { BoostKind, CompiledConfig, StatKey, Stats } from "./config.js";
-import { compileConfig, normalizeProvider, PROVIDER_META, STAT_LABEL } from "./config.js";
+import {
+  compileConfig,
+  normalizeProvider,
+  normalizeStats,
+  PROVIDER_META,
+  STAT_LABEL,
+} from "./config.js";
 import { CLASS_LENS, CLASS_STRATEGY } from "./brain.js";
 import { fillPrice } from "./market.js";
 import type { AgentInit, AgentTickCtx, GridPos, NotifyKind } from "./agent.js";
@@ -31,6 +37,12 @@ export const MAX_CUSTOM_AGENTS = 4;
 export const CUSTOM_DEPLOY_COST = 150;
 /** REWIRE: moving one agent to another house, mid-run, costs this many coins. */
 export const REWIRE_COST = 60;
+
+/**
+ * Save format version. Bump it when a field changes meaning; a save from a
+ * different version is refused, not guessed at, and the player starts fresh.
+ */
+export const SAVE_VERSION = 1;
 /** Grid units per tick before RELAY. */
 export const BASE_WALK_SPEED = 0.055;
 
@@ -150,6 +162,37 @@ export interface CustomAgentSpec {
   provider?: Provider;
 }
 
+export interface AgentSave {
+  id: string;
+  name: string;
+  cls: AgentClass;
+  custom: boolean;
+  provider: Provider;
+  stats: Stats;
+  targetStats: Stats | null;
+  strategy: StrategyParams;
+  systemSuffix: string;
+  home: GridPos;
+  level: number;
+  xp: number;
+  realizedPnlEth: number;
+  trades: number;
+  wins: number;
+  decisions: number;
+  skips: number;
+  spentUsd: number;
+}
+
+export interface VillageSave {
+  version: number;
+  tick: number;
+  treasury: number;
+  totalSpentUsd: number;
+  buildings: { id: BuildingId; level: number; job: BuildingState["job"] }[];
+  boosts: ActiveBoost[];
+  agents: AgentSave[];
+}
+
 export interface VillageOptions {
   market: Market;
   brain: Brain;
@@ -164,6 +207,131 @@ export interface VillageOptions {
   markInterval?: number;
   /** Called once per tick before agents step. The sim market advances here. */
   onTick?: (tick: number) => void | Promise<void>;
+}
+
+/* -------------------------------------------------------------- save guard */
+
+function num(v: unknown, fallback = 0): number {
+  return typeof v === "number" && Number.isFinite(v) ? v : fallback;
+}
+
+function nonNeg(v: unknown): number {
+  return Math.max(0, num(v));
+}
+
+function str(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : fallback;
+}
+
+const CLASS_SET = new Set<AgentClass>(["SCOUT", "SNIPER", "WHALE", "ARB", "CUSTOM"]);
+const BOOST_SET = new Set<BoostKind>(["overclock", "alphaFeed", "leverage", "zeroGas"]);
+const BUILDING_SET = new Set<BuildingId>(BUILDING_DEFS.map((d) => d.id));
+
+function parseGrid(v: unknown, fallback: GridPos): GridPos {
+  const o = v as Partial<GridPos> | undefined;
+  if (!o || typeof o !== "object") return { ...fallback };
+  return { gx: num(o.gx, fallback.gx), gy: num(o.gy, fallback.gy) };
+}
+
+function parseStrategy(v: unknown, cls: AgentClass): StrategyParams {
+  const base = CLASS_STRATEGY[cls] ?? CLASS_STRATEGY.CUSTOM;
+  const o = (v ?? {}) as Partial<StrategyParams>;
+  const holdMin = Math.max(1, num(o.holdMin, base.holdMin));
+  return {
+    entryThreshold: num(o.entryThreshold, base.entryThreshold),
+    maxCurve: num(o.maxCurve, base.maxCurve),
+    holdMin,
+    holdMax: Math.max(holdMin, num(o.holdMax, base.holdMax)),
+    sizeMult: Math.max(0, num(o.sizeMult, base.sizeMult)),
+    requireBookAlign:
+      typeof o.requireBookAlign === "boolean" ? o.requireBookAlign : base.requireBookAlign,
+  };
+}
+
+/**
+ * Validates an unknown blob into a VillageSave, or returns null.
+ *
+ * Every number is coerced and clamped and every id is checked against the set
+ * the engine knows. A save is data from disk, which means it is data from
+ * anywhere: it gets the same distrust as a model's verdict.
+ */
+export function parseSave(input: unknown): VillageSave | null {
+  if (!input || typeof input !== "object") return null;
+  const raw = input as Record<string, unknown>;
+  if (raw.version !== SAVE_VERSION) return null;
+  if (!Array.isArray(raw.agents) || !Array.isArray(raw.buildings)) return null;
+
+  const buildings: VillageSave["buildings"] = [];
+  for (const entry of raw.buildings as Record<string, unknown>[]) {
+    const id = entry?.id as BuildingId;
+    if (!BUILDING_SET.has(id)) continue;
+    const level = Math.max(0, Math.min(MAX_BUILDING_LEVEL, Math.floor(nonNeg(entry.level))));
+    const jobRaw = entry.job as Record<string, unknown> | null | undefined;
+    const job =
+      jobRaw && (jobRaw.kind === "build" || jobRaw.kind === "upgrade")
+        ? {
+            kind: jobRaw.kind as "build" | "upgrade",
+            toLevel: Math.max(1, Math.min(MAX_BUILDING_LEVEL, Math.floor(nonNeg(jobRaw.toLevel)))),
+            ticksLeft: Math.floor(nonNeg(jobRaw.ticksLeft)),
+            totalTicks: Math.max(1, Math.floor(nonNeg(jobRaw.totalTicks))),
+          }
+        : null;
+    buildings.push({ id, level, job });
+  }
+
+  const boosts: ActiveBoost[] = [];
+  for (const entry of (Array.isArray(raw.boosts) ? raw.boosts : []) as Record<string, unknown>[]) {
+    const kind = entry?.kind as BoostKind;
+    if (!BOOST_SET.has(kind)) continue;
+    const ticksLeft = Math.floor(nonNeg(entry.ticksLeft));
+    if (ticksLeft <= 0) continue;
+    boosts.push({
+      kind,
+      ticksLeft,
+      totalTicks: Math.max(ticksLeft, Math.floor(nonNeg(entry.totalTicks))),
+    });
+  }
+
+  const agents: AgentSave[] = [];
+  for (const entry of raw.agents as Record<string, unknown>[]) {
+    if (!entry || typeof entry !== "object") continue;
+    const id = str(entry.id);
+    if (!id) continue;
+    const cls = CLASS_SET.has(entry.cls as AgentClass) ? (entry.cls as AgentClass) : "CUSTOM";
+    agents.push({
+      id,
+      name: str(entry.name, id).slice(0, 24),
+      cls,
+      custom: entry.custom === true,
+      provider: normalizeProvider(entry.provider),
+      stats: normalizeStats((entry.stats ?? {}) as Partial<Stats>),
+      targetStats: entry.targetStats
+        ? normalizeStats(entry.targetStats as Partial<Stats>)
+        : null,
+      strategy: parseStrategy(entry.strategy, cls),
+      systemSuffix: str(entry.systemSuffix),
+      home: parseGrid(entry.home, { gx: 6, gy: 6 }),
+      level: Math.floor(nonNeg(entry.level)),
+      xp: nonNeg(entry.xp),
+      realizedPnlEth: num(entry.realizedPnlEth),
+      trades: Math.floor(nonNeg(entry.trades)),
+      wins: Math.floor(nonNeg(entry.wins)),
+      decisions: Math.floor(nonNeg(entry.decisions)),
+      skips: Math.floor(nonNeg(entry.skips)),
+      spentUsd: nonNeg(entry.spentUsd),
+    });
+  }
+  if (agents.length === 0) return null;
+
+  return {
+    version: SAVE_VERSION,
+    tick: Math.floor(nonNeg(raw.tick)),
+    treasury: nonNeg(raw.treasury),
+    totalSpentUsd: nonNeg(raw.totalSpentUsd),
+    buildings,
+    boosts,
+    agents,
+  };
 }
 
 function classHome(index: number): GridPos {
@@ -246,6 +414,113 @@ export class Village {
     for (const init of opts.roster ?? defaultRoster()) {
       this.agents.push(new VillageAgent(init));
     }
+  }
+
+  /* ------------------------------------------------------------------ save */
+
+  /**
+   * A serialisable village. What survives: progress the player paid for —
+   * treasury, building levels and running jobs, active boosts, every agent's
+   * stats, level, XP, house and record.
+   *
+   * What does NOT survive, deliberately: **open positions**. A position is
+   * priced against a market that no longer exists after a reload, so carrying
+   * one over would mean inventing its P&L. Unrealised P&L is discarded rather
+   * than banked — the trade never closed, so it never counted.
+   *
+   * The walk, the current state and the training timer are not saved either:
+   * agents resume at REST at home. That is cosmetic; the config they compile
+   * to on the next tick is identical.
+   */
+  save(): VillageSave {
+    return {
+      version: SAVE_VERSION,
+      tick: this.tick,
+      treasury: this.treasury,
+      totalSpentUsd: this.totalSpentUsd,
+      buildings: [...this.buildings.values()].map((b) => ({
+        id: b.id,
+        level: b.level,
+        job: b.job ? { ...b.job } : null,
+      })),
+      boosts: this.boosts.map((b) => ({ ...b })),
+      agents: this.agents.map((a) => ({
+        id: a.id,
+        name: a.name,
+        cls: a.cls,
+        custom: a.custom,
+        provider: a.provider,
+        stats: { ...a.stats },
+        targetStats: a.targetStats ? { ...a.targetStats } : null,
+        strategy: { ...a.strategy },
+        systemSuffix: a.systemSuffix,
+        home: { ...a.home },
+        level: a.level,
+        xp: a.xp,
+        realizedPnlEth: a.realizedPnlEth,
+        trades: a.trades,
+        wins: a.wins,
+        decisions: a.decisions,
+        skips: a.skips,
+        spentUsd: a.spentUsd,
+      })),
+    };
+  }
+
+  /**
+   * Rebuilds this village from a save. Returns false and changes NOTHING if
+   * the save is from another version or is not shaped like a save — a corrupt
+   * blob in someone's browser must not take the game down with it.
+   */
+  restore(save: unknown): boolean {
+    const parsed = parseSave(save);
+    if (!parsed) return false;
+
+    this.tick = parsed.tick;
+    this.treasury = parsed.treasury;
+    this.totalSpentUsd = parsed.totalSpentUsd;
+
+    for (const def of BUILDING_DEFS) {
+      const saved = parsed.buildings.find((b) => b.id === def.id);
+      this.buildings.set(def.id, {
+        id: def.id,
+        level: saved ? saved.level : def.prebuilt ? 1 : 0,
+        pos: def.pos,
+        trains: def.trains,
+        job: saved?.job ?? null,
+      });
+    }
+
+    this.boosts = parsed.boosts;
+
+    this.agents = parsed.agents.map((a) => {
+      const agent = new VillageAgent({
+        id: a.id,
+        name: a.name,
+        cls: a.cls,
+        stats: a.stats,
+        targetStats: a.targetStats ?? undefined,
+        home: a.home,
+        strategy: a.strategy,
+        systemSuffix: a.systemSuffix,
+        custom: a.custom,
+        provider: a.provider,
+      });
+      agent.level = a.level;
+      agent.xp = a.xp;
+      agent.realizedPnlEth = a.realizedPnlEth;
+      agent.trades = a.trades;
+      agent.wins = a.wins;
+      agent.decisions = a.decisions;
+      agent.skips = a.skips;
+      agent.spentUsd = a.spentUsd;
+      return agent;
+    });
+
+    this.notifications = [];
+    this.tape = [];
+    this.snapshots.clear();
+    return true;
   }
 
   /* ---------------------------------------------------------------- roster */

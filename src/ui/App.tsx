@@ -36,6 +36,9 @@ import {
   publishBuild,
   publishVillage,
   saveMe,
+  loadVillageSave,
+  saveVillage,
+  clearVillageSave,
   type Board,
   type BuildEntry,
   type Me,
@@ -43,6 +46,9 @@ import {
 import type { BacktestComparison } from "../sim/backtest.js";
 
 const SESSION_SEED = 42;
+
+/** Ticks between autosaves. At 2x speed that is roughly every four seconds. */
+const AUTOSAVE_EVERY_TICKS = 240;
 
 type Overlay = "NONE" | "DEX" | "FORGE" | "BOARD";
 
@@ -71,16 +77,43 @@ export function App(): React.ReactElement {
   const [boardTab, setBoardTab] = useState<"BUILDS" | "VILLAGES">("BUILDS");
   const [me, setMe] = useState<Me>({ owner: "", lastBuildId: null });
   const [toast, setToast] = useState<string | null>(null);
+  /* Two-step: the second click within the window is the one that wipes. */
+  const [resetArmed, setResetArmed] = useState(false);
+  /* The loop must not run until we know whether there is a village to load. */
+  const [booted, setBooted] = useState(false);
+
+  /* RESET clears the save and reloads — and the reload fires pagehide, which
+     would write the village straight back. This latch is what stops the wipe
+     from being undone by its own reload. */
+  const wipingRef = useRef(false);
 
   const speedRef = useRef(speed);
   const pausedRef = useRef(paused);
   speedRef.current = speed;
   pausedRef.current = paused;
 
+  /* Restore before the first tick, so a reload resumes rather than restarts.
+     A save that fails validation is ignored and the fresh village stands. */
   useEffect(() => {
+    void (async () => {
+      try {
+        const raw = await loadVillageSave();
+        if (raw && village.restore(raw)) {
+          setView(village.view());
+          setSelectedAgent(village.agents[0]?.id ?? null);
+        }
+      } finally {
+        setBooted(true);
+      }
+    })();
+  }, [village]);
+
+  useEffect(() => {
+    if (!booted) return;
     let alive = true;
     let handle = 0;
     let frame = 0;
+    let lastSaveTick = village.tick;
 
     const loop = async (): Promise<void> => {
       if (!alive) return;
@@ -89,6 +122,10 @@ export function App(): React.ReactElement {
       }
       frame += 1;
       if (frame % 2 === 0) setView(village.view());
+      if (!wipingRef.current && village.tick - lastSaveTick >= AUTOSAVE_EVERY_TICKS) {
+        lastSaveTick = village.tick;
+        void saveVillage(village.save());
+      }
       handle = requestAnimationFrame(() => void loop());
     };
     handle = requestAnimationFrame(() => void loop());
@@ -96,7 +133,23 @@ export function App(): React.ReactElement {
       alive = false;
       cancelAnimationFrame(handle);
     };
-  }, [village]);
+  }, [village, booted]);
+
+  /* A tab closed between autosaves would otherwise lose up to 240 ticks. */
+  useEffect(() => {
+    if (!booted) return;
+    const flush = (): void => {
+      if (wipingRef.current) return;
+      void saveVillage(village.save());
+    };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", flush);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", flush);
+      flush();
+    };
+  }, [village, booted]);
 
   useEffect(() => {
     void (async () => {
@@ -241,6 +294,22 @@ export function App(): React.ReactElement {
     [village, flash],
   );
 
+  /* Starting over has to be possible once progress persists — and it has to
+     take two deliberate clicks, because it cannot be undone. */
+  const onReset = useCallback(() => {
+    if (!resetArmed) {
+      setResetArmed(true);
+      setTimeout(() => setResetArmed(false), 4000);
+      return;
+    }
+    setResetArmed(false);
+    wipingRef.current = true;
+    void (async () => {
+      await clearVillageSave();
+      window.location.reload();
+    })();
+  }, [resetArmed]);
+
   const nextCost = selectedBuilding ? village.nextCost(selectedBuilding) : null;
   const rushCost = selectedBuilding ? village.rushCost(selectedBuilding) : 0;
 
@@ -265,6 +334,13 @@ export function App(): React.ReactElement {
           </button>
           <button className="dv-btn dv-btn-primary" onClick={() => void onPublishVillage()}>
             PUBLISH
+          </button>
+          <button
+            className={`dv-btn dv-btn-tiny${resetArmed ? " dv-btn-danger" : ""}`}
+            onClick={onReset}
+            title="wipes the saved village in this browser"
+          >
+            {resetArmed ? "SURE?" : "RESET"}
           </button>
         </div>
       </header>

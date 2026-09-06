@@ -2,11 +2,12 @@
 
 <img src="assets/banner.png" alt="DEGEN VILLAGE — an isometric village where AI agents train in buildings and trade memecoins" width="100%">
 
-![tests](https://img.shields.io/badge/tests-133%20green-CCFF00?style=flat-square&labelColor=1C180D)
+![tests](https://img.shields.io/badge/tests-142%20green-CCFF00?style=flat-square&labelColor=1C180D)
 ![typescript](https://img.shields.io/badge/typescript-5.7-8fae00?style=flat-square&labelColor=1C180D)
 ![houses](https://img.shields.io/badge/houses-anthropic%20·%20openai%20·%20xai-c7e26a?style=flat-square&labelColor=1C180D)
 ![execution](https://img.shields.io/badge/execution-dry%20run%20by%20default-f87171?style=flat-square&labelColor=1C180D)
 ![licence](https://img.shields.io/badge/licence-MIT-9a9578?style=flat-square&labelColor=1C180D)
+[![ci](https://github.com/zostaff/agent-arena/actions/workflows/ci.yml/badge.svg)](https://github.com/zostaff/agent-arena/actions/workflows/ci.yml)
 
 **[Roadmap](ROADMAP.md)** · **[Specs](specs/00-overview.md)** · **[Stat compiler](specs/02-stat-compiler.md)** · **[Live wires](specs/04-live.md)**
 
@@ -24,7 +25,7 @@ config editor with a progress bar in front of it.
 
 ```bash
 npm install
-npm test        # 133 tests, ~1s
+npm test        # 142 tests, ~1s
 npm run sim     # MODE=sim — seeded, deterministic, free
 npm run dev     # the village in a browser
 ```
@@ -137,6 +138,30 @@ Forced by the vendors' current APIs — sending the brief's version returns a
 **xAI is the one house where `temperature: 0` still works**, and it is still
 sent there — the determinism the brief asked for survives on exactly one of the
 three wires.
+
+## Running it for real
+
+The village is a static bundle: no server, no secrets in the build — live keys
+only ever exist in `MODE=live` on your own machine. So the browser build is
+published straight from CI.
+
+| Piece | What it does |
+|---|---|
+| `.github/workflows/ci.yml` | typecheck → tests → build on every push and PR |
+| `.github/workflows/pages.yml` | the same gate, then publishes `dist` to GitHub Pages |
+| `src/ui/ErrorBoundary.tsx` | a crash shows the message and offers to wipe the save, instead of a white screen |
+| autosave | every 240 ticks, plus a flush on `pagehide` and `visibilitychange` |
+
+**Your village survives a reload.** Treasury, building levels, running jobs,
+boosts, and every agent's stats, level, XP, house and record come back.
+Open positions deliberately do not: a position is priced against a market that
+no longer exists after a reload, so carrying one over would mean inventing its
+P&L. RESET in the header wipes the save — two clicks, because it cannot be
+undone.
+
+A save is treated the way a model's answer is treated: as data from anywhere.
+`parseSave` coerces and clamps every number, checks every id against the set
+the engine knows, and refuses a save it does not recognise instead of guessing.
 
 ## Safety rails
 

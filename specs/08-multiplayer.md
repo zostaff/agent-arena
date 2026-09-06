@@ -11,6 +11,7 @@ local to that browser. `isShared()` reports which, and the board says so.
 |---|---|---|
 | `dv_board_v2` | yes | `{ builds: BuildEntry[], villages: VillageEntry[] }` |
 | `dv_me` | no | `{ owner, lastBuildId }` |
+| `dv_village_v1` | no | the player's own village — see `05-village-economy.md` |
 
 `owner` is generated once as `degen-xxxxx` and persisted.
 

@@ -89,6 +89,7 @@ button, input, textarea { font-family: var(--mono); }
 .dv-btn-on { background: var(--accent); color: #141104; border-color: var(--accent); font-weight: 700; }
 .dv-btn-primary { border-color: var(--accent); color: var(--accent); }
 .dv-btn-tiny { padding: 3px 7px; font-size: 9px; }
+.dv-btn-danger { border-color: #f87171; color: #f87171; background: rgba(248, 113, 113, 0.12); }
 .dv-btn-wide { width: 100%; margin-top: 6px; }
 .dv-btn-boost span { color: var(--accent); margin-left: 4px; }
 
@@ -341,6 +342,25 @@ button, input, textarea { font-family: var(--mono); }
 .dv-board-me { color: var(--accent); }
 .dv-board-name { font-weight: 700; }
 .dv-board-owner, .dv-board-stats { color: var(--ink-dim); }
+
+/* ----------------------------------------------------------------- crash */
+
+.dv-crash {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: var(--bg-deep); padding: 24px;
+}
+.dv-crash-card {
+  max-width: 560px; padding: 20px 22px; border-radius: 14px;
+  background: rgba(38, 33, 16, 0.62); border: 1px solid var(--glass-edge);
+}
+.dv-crash-title { color: #f87171; font-size: 12px; letter-spacing: 0.18em; margin-bottom: 10px; }
+.dv-crash-msg {
+  font-size: 11px; color: var(--ink); background: rgba(0, 0, 0, 0.35);
+  padding: 10px; border-radius: 8px; white-space: pre-wrap; word-break: break-word;
+  max-height: 180px; overflow: auto;
+}
+.dv-crash-note { font-size: 10px; line-height: 1.5; color: var(--ink-dim); }
+.dv-crash-actions { display: flex; gap: 8px; margin-top: 12px; }
 
 /* ----------------------------------------------------------------- toast */
 
