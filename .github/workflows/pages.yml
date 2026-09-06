@@ -41,7 +41,11 @@ jobs:
         env:
           GITHUB_PAGES: "1"
 
+      # enablement: true turns Pages on the first time this runs, so the
+      # deploy does not depend on someone remembering a settings toggle.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
