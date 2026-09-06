@@ -1,0 +1,108 @@
+/**
+ * DEGEN VILLAGE — core type contracts.
+ * Zero dependencies, isomorphic: this file must import nothing.
+ */
+
+export type Action = "BUY" | "SELL" | "SKIP";
+
+export type AgentClass = "SCOUT" | "SNIPER" | "WHALE" | "ARB" | "CUSTOM";
+
+export type AgentState =
+  | "REST"
+  | "TRAIN"
+  | "SCAN"
+  | "DECIDE"
+  | "HOLD"
+  | "SETTLE";
+
+export interface Candle {
+  /** Tick index at which the candle opened. */
+  t: number;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  /** Volume in ETH. */
+  v: number;
+}
+
+export interface BookLevel {
+  price: number;
+  /** Size in ETH at this level. */
+  size: number;
+}
+
+export interface Snapshot {
+  pair: string;
+  last: number;
+  candles: Candle[];
+  bids: BookLevel[];
+  asks: BookLevel[];
+  ageMinutes: number;
+  uniqueBuyers: number;
+  curveProgressPct: number;
+  reserveEth: number;
+}
+
+export interface Market {
+  listPairs(): Promise<string[]>;
+  snapshot(pair: string, ctxCandles: number): Promise<Snapshot>;
+}
+
+export interface Verdict {
+  action: Action;
+  sizeEth: number;
+  confidence: number;
+  holdTicks: number;
+  reason: string;
+}
+
+/** Strategy parameters the sim brain reads. Authored in FORGE. */
+export interface StrategyParams {
+  /** Momentum (fractional, e.g. 0.012 = 1.2%) required before an entry. */
+  entryThreshold: number;
+  /** Skip pairs whose bonding curve is beyond this percentage. */
+  maxCurve: number;
+  holdMin: number;
+  holdMax: number;
+  /** Multiplier applied to the compiled position size. */
+  sizeMult: number;
+  /** Require book depth to agree with the trade direction. */
+  requireBookAlign: boolean;
+}
+
+export interface BrainOpts {
+  /** Hard ceiling. The verdict's sizeEth is clamped to this AFTER parsing. */
+  maxSizeEth: number;
+  /** Model id from the ladder in config.ts. */
+  model: string;
+  /** Reasoning budget in tokens; mapped to output_config.effort in live mode. */
+  thinkingBudget: number;
+  agentClass: AgentClass;
+  strategy: StrategyParams;
+  /** Live mode only: appended to the Claude system prompt (FORGE field). */
+  systemSuffix?: string;
+  /** Live mode only: class lens sentence. */
+  lens?: string;
+  /** Whether the agent currently holds a position (enables SELL). */
+  inPosition?: boolean;
+  /** Abort signal for the network call. */
+  signal?: AbortSignal;
+}
+
+export interface Brain {
+  /** Never throws. Any failure resolves to a SKIP verdict. */
+  decide(snap: Snapshot, opts: BrainOpts): Promise<Verdict>;
+}
+
+export const SKIP: Verdict = Object.freeze({
+  action: "SKIP",
+  sizeEth: 0,
+  confidence: 0,
+  holdTicks: 0,
+  reason: "skip",
+});
+
+export function skipVerdict(reason: string): Verdict {
+  return { action: "SKIP", sizeEth: 0, confidence: 0, holdTicks: 0, reason };
+}
