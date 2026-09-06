@@ -1,50 +1,65 @@
-# agent-arena — DEGEN VILLAGE
+<div align="center">
+
+<img src="assets/banner.png" alt="DEGEN VILLAGE — an isometric village where AI agents train in buildings and trade memecoins" width="100%">
+
+![tests](https://img.shields.io/badge/tests-124%20green-CCFF00?style=flat-square&labelColor=1C180D)
+![typescript](https://img.shields.io/badge/typescript-5.7-8fae00?style=flat-square&labelColor=1C180D)
+![houses](https://img.shields.io/badge/houses-anthropic%20·%20openai%20·%20xai-c7e26a?style=flat-square&labelColor=1C180D)
+![execution](https://img.shields.io/badge/execution-dry%20run%20by%20default-f87171?style=flat-square&labelColor=1C180D)
+![licence](https://img.shields.io/badge/licence-MIT-9a9578?style=flat-square&labelColor=1C180D)
+
+**[Roadmap](ROADMAP.md)** · **[Specs](specs/00-overview.md)** · **[Stat compiler](specs/02-stat-compiler.md)** · **[Live wires](specs/04-live.md)**
+
+</div>
+
+## What this is
 
 An isometric village where AI agents train in buildings, walk to a terminal,
 and trade memecoins on the Pons bonding-curve DEX (Robinhood Chain).
 
-**New: three houses.** Every agent is wired to Anthropic, OpenAI or xAI — a
-choice you make in the FORGE and change later with REWIRE. It is not a skin: it
-changes the model id on the wire, the price of every decision, and which
-parameters the request may legally carry.
-
 **Every stat bar is a real config field the engine reads.** Fill the SPD bar and
 the agent's poll interval genuinely drops. Fill PTN and it genuinely reads more
-candles, thinks with a bigger budget, and at 12 switches models. The village is
-a config editor with a progress bar in front of it.
+candles, thinks with a bigger budget, and at 12 changes model. The village is a
+config editor with a progress bar in front of it.
 
-```
+```bash
 npm install
-npm test        # 124 tests
+npm test        # 124 tests, ~1s
 npm run sim     # MODE=sim — seeded, deterministic, free
 npm run dev     # the village in a browser
 ```
 
-## Architecture
+## Three houses
 
-```
-                    ┌───────────────────────────┐
-                    │   src/core  (zero deps)   │
-                    │  config · agent · village │
-                    │  market helpers · brain   │
-                    └──────────┬────────────────┘
-        Market + Brain injected│
-              ┌────────────────┴────────────────┐
-              ▼                                 ▼
-   src/sim   SimMarket + heuristicBrain  src/live  PonsMarket + liveBrain
-   seeded · deterministic · free         Bitquery · viem · 3 houses
-                                         claude · openai · xai, routed
-                                         per agent by src/live/router.ts
-              │                                 │
-              └──────────► src/run.ts ◄─────────┘
-                         MODE=sim | MODE=live
-                                 │
-                            src/ui  React · SVG · canvas-free
-```
+Every agent is wired to **Anthropic**, **OpenAI** or **xAI** — chosen in the
+FORGE, changed later with REWIRE. Real vendor list prices, standard tier,
+checked 2026-09-06.
 
-`src/core` imports nothing at all. That is what lets the same engine run in
-node and in the browser, and what makes a 7000-tick backtest and a live session
-comparable.
+| House | PTN 0 → PTN 12 | $/decision at PTN 0 | at PTN 12 | jump |
+|---|---|---|---|---|
+| **xAI** | `grok-4.3` → `grok-4.6` | $0.00184 | $0.02414 | 13.1x |
+| **Anthropic** | `claude-opus-5` → `claude-fable-5-1` | $0.01186 | $0.18668 | 15.7x |
+| **OpenAI** | `gpt-5.6-terra` → `gpt-6-astra` | $0.00534 | $0.18668 | 34.9x |
+
+A whole Grok 4.6 decision — frontier rung, 96 candles, 3000 reasoning tokens —
+costs less than a quarter of an Opus 5 decision at PTN 0. GPT-6 Astra and
+Fable 5.1 both bill $10/$50, so at the top they cost the same to the cent; the
+difference is what you paid on the way up.
+
+**The house changes exactly three things**: the model id on the wire, the price
+of every decision, and which parameters the request may legally carry. Poll
+interval, context depth, position size and slippage are identical across
+houses — a test asserts it field by field, so the choice can never quietly
+become a balance lever.
+
+| Where | What it does |
+|---|---|
+| **FORGE** | three buttons above the strategy sliders; the compiled-config preview reprices as you click, the backtest deliberately does not move |
+| **REWIRE** | 60 coins, in the agent inspector, mid-run — refused while a position is open, because the verdict that opened it came from the old house |
+| **`AGENT_PROVIDERS=xai,openai`** | wires the roster in order at boot in live mode, without touching code |
+
+Adding a fourth house is one entry in `MODEL_LADDERS`, one in `MODEL_PRICING`,
+one `WireAdapter`, and one line in the router.
 
 ## The stat compiler
 
@@ -60,38 +75,66 @@ PTN buys context depth and reasoning budget, **not** a better model — until
 PTN 12, which unlocks the frontier rung of whichever house the agent is wired
 to. That trade-off is the LAB.
 
-## Three houses
+## Architecture
 
-Pick the brain your agents think with. Real vendor list prices, standard tier,
-checked 2026-09-06.
+```
+                    ┌───────────────────────────┐
+                    │   src/core  (zero deps)   │
+                    │  config · agent · village │
+                    │  market helpers · brain   │
+                    └──────────┬────────────────┘
+        Market + Brain injected│
+              ┌────────────────┴────────────────┐
+              ▼                                 ▼
+   src/sim   SimMarket + heuristicBrain  src/live  PonsMarket + liveBrain
+   seeded · deterministic · free         Bitquery · viem · 3 houses
+                                         routed per agent by router.ts
+              │                                 │
+              └──────────► src/run.ts ◄─────────┘
+                         MODE=sim | MODE=live
+                                 │
+                            src/ui  React · SVG · canvas-free
+```
 
-| House | PTN 0 → PTN 12 | $/decision at PTN 0 | $/decision at PTN 12 | jump |
-|---|---|---|---|---|
-| **xAI** | `grok-4.3` → `grok-4.6` | $0.00184 | $0.02414 | 13.1x |
-| **Anthropic** | `claude-opus-5` → `claude-fable-5-1` | $0.01186 | $0.18668 | 15.7x |
-| **OpenAI** | `gpt-5.6-terra` → `gpt-6-astra` | $0.00534 | $0.18668 | 34.9x |
+`src/core` imports nothing at all. That is what lets the same engine run in
+node and in the browser, and what makes a 7000-tick backtest and a live session
+comparable.
 
-A whole Grok 4.6 decision — frontier rung, 96 candles, 3000 reasoning tokens —
-costs less than a quarter of what an Opus 5 decision costs at PTN 0. GPT-6
-Astra and Fable 5.1 both bill $10/$50, so at the top they cost the same to the
-cent; the difference is what you paid to get there.
+## Deviations from the original brief
 
-**The house changes exactly three things**: the model id on the wire, the price
-of every decision, and which parameters the request may legally carry. Poll
-interval, context depth, position size and slippage are identical across
-houses — same stats, same config, different bill. A test asserts that field by
-field, so it can never quietly become a balance lever.
+Forced by the vendors' current APIs — sending the brief's version returns a
+`400`. Full reasoning in [specs/04-live.md](specs/04-live.md).
 
-* **FORGE** — three buttons above the strategy sliders. The compiled-config
-  preview reprices as you click; the backtest deliberately does not move,
-  because it runs the seeded heuristic brain and measures the *build*.
-* **REWIRE** — 60 coins, in the agent inspector, mid-run. Refused while the
-  agent holds a position: the verdict that opened it came from the old house.
-* **`AGENT_PROVIDERS=xai,openai`** — wires the roster in order at boot in live
-  mode, without touching code.
+1. **`temperature: 0` is not sent** to `claude-opus-5` or `claude-fable-5-1`.
+   Sampling parameters were removed on that model family. Determinism here
+   comes from `src/sim`, which never calls a live brain.
+2. **`thinking.budget_tokens` is not sent.** Also rejected on both models. The
+   reasoning budget PTN buys is encoded as `output_config.effort`
+   (`0 → low`, `512 → medium`, `1500 → high`, `3000 → xhigh`) and still rides
+   on `max_tokens` as headroom. The number the village displays and prices is
+   unchanged.
+3. **OpenAI rejects sampling parameters too.** `temperature`, `top_p` and
+   `logprobs` were removed on `gpt-6-astra` and the GPT-5.6 family; the
+   Responses API carries the budget as `reasoning.effort`.
 
-Adding a fourth house is one entry in `MODEL_LADDERS`, one in `MODEL_PRICING`,
-one `WireAdapter`, and one line in the router.
+**xAI is the one house where `temperature: 0` still works**, and it is still
+sent there — the determinism the brief asked for survives on exactly one of the
+three wires.
+
+## Safety rails
+
+* `decide()` **never throws**. Parse failure, bad status, timeout, transport
+  error, empty content, refusal, missing key — all resolve to `SKIP`.
+* `sizeEth` is clamped to `maxSizeEth` **after** parsing, every time, on every
+  house. The model is never trusted on size.
+* **Degrade-once.** A `400` body is *read*, not just counted: if it names a
+  parameter (`reasoning_effort`, `temperature`, `store`), the request is sent
+  again immediately without it, outside the retry budget. A silently dead house
+  is worse than a slightly slower one.
+* `execute.ts` defaults to `dryRun: true` and prints the exact call it would
+  have sent. `DRY_RUN=0` is the only way off.
+* A fill whose realised slippage exceeds the agent's `slippageBps` is refused,
+  not eaten.
 
 ## Specs
 
@@ -104,51 +147,11 @@ Written so a future session can pick up any part without re-reading the code.
 | [02 — Stat compiler](specs/02-stat-compiler.md) | every formula, the three ladders, pricing, boosts, boundary table |
 | [03 — Sim](specs/03-sim.md) | mulberry32, the random walk and its tuning, heuristic brain, backtest |
 | [04 — Live](specs/04-live.md) | all three wire contracts **and their forced deviations**, degrade-once, Bitquery queries, viem execution |
-| [05 — Village economy](specs/05-village-economy.md) | buildings, costs, times, RUSH, boosts, treasury, fills |
-| [06 — FORGE](specs/06-forge.md) | stat budget, strategy params, prompt suffix, backtest, deploy |
-| [07 — UI](specs/07-ui.md) | projection, SVG anatomy, HUD, DEX overlay, palette |
+| [05 — Village economy](specs/05-village-economy.md) | buildings, costs, times, RUSH, boosts, REWIRE, treasury, fills |
+| [06 — FORGE](specs/06-forge.md) | stat budget, house picker, strategy params, prompt suffix, backtest, deploy |
+| [07 — UI](specs/07-ui.md) | projection, SVG anatomy, HUD, REWIRE panel, DEX overlay, palette |
 | [08 — Multiplayer](specs/08-multiplayer.md) | `window.storage`, the two rankings, load-a-rival's-build |
 | [09 — Tests](specs/09-tests.md) | what each file covers and which assertions are load-bearing |
-
-## Deviations from the original brief
-
-Forced by the vendors' current APIs — sending the brief's version returns a
-`400`. Full reasoning in [specs/04-live.md](specs/04-live.md).
-
-1. **`temperature: 0` is not sent** to `claude-opus-5` or `claude-fable-5-1`.
-   Sampling parameters were removed on that model family. It is still sent for
-   models that accept it. Determinism here comes from `src/sim`, which never
-   calls the live brain.
-2. **`thinking.budget_tokens` is not sent.** Also rejected on both models. The
-   reasoning budget PTN buys is encoded as `output_config.effort`
-   (`0 → low`, `512 → medium`, `1500 → high`, `3000 → xhigh`) and still rides
-   on `max_tokens` as headroom. The number the village displays and prices is
-   unchanged.
-
-3. **OpenAI rejects sampling parameters too.** `temperature`, `top_p` and
-   `logprobs` were removed on `gpt-6-astra` and the GPT-5.6 family. The
-   Responses API carries the reasoning budget as `reasoning.effort`.
-
-**xAI is the one house where `temperature: 0` still works**, and it is still
-sent there — the determinism the brief asked for survives on exactly one of the
-three wires.
-
-Everything else in the brief is implemented as written.
-
-## Safety rails
-
-* `decide()` **never throws**. Parse failure, bad status, timeout, transport
-  error, empty content, refusal, missing key — all resolve to `SKIP`.
-* `sizeEth` is clamped to `maxSizeEth` **after** parsing, every time. The model
-  is never trusted on size.
-* `execute.ts` defaults to `dryRun: true` and prints the exact call it would
-  have sent. `DRY_RUN=0` is the only way off.
-* A fill whose realised slippage exceeds the agent's `slippageBps` is refused,
-  not eaten.
-* **Degrade-once.** A `400` body is *read*, not just counted: if it names a
-  parameter (`reasoning_effort`, `temperature`, `store`), the request is sent
-  again immediately without it, outside the retry budget. A silently dead house
-  is worse than a slightly slower one.
 
 ## Environment
 
@@ -167,6 +170,18 @@ cp .env.example .env
 | `DRY_RUN` | `src/live/execute.ts` — anything but `0` keeps it dry |
 | `MODE`, `SEED`, `TICKS` | `src/run.ts` |
 
+## What is next
+
+Everything planned, shipped and deliberately refused lives in
+**[ROADMAP.md](ROADMAP.md)** — including the honest note that the OpenAI and
+xAI wires are typed and tested but have not yet answered for real.
+
 ## Licence
 
 MIT.
+
+---
+
+<div align="center">
+<sub><b>no autopilot · dry run by default · every bar is a field the engine reads</b></sub>
+</div>

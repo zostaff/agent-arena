@@ -56,11 +56,15 @@ in the browser, and what makes a backtest and a live session comparable.
 | `src/live/pons.ts` | Bitquery GraphQL, `PonsLaunches` + `PonsOHLC`, 8s cache |
 | `src/live/brain.ts` | Anthropic Messages API, never throws out of `decide()` |
 | `src/live/execute.ts` | viem, chain 4663, Pons router, `dryRun: true` by default |
-| `src/ui/*` | isometric SVG renderer, HUD, DEX overlay, FORGE, leaderboard |
+| `src/ui/*` | isometric SVG renderer, HUD, REWIRE panel, DEX overlay, FORGE, leaderboard |
+| `assets/banner.svg` | README banner, source of truth; `banner.png` is rendered from it |
 | `src/run.ts` | node entry, `MODE` switches sim/live |
 
 ## Reading order for a new session
 
+0. [`ROADMAP.md`](../ROADMAP.md) — what is planned, what shipped, and what was
+   deliberately refused. **Every improvement lands there first**: one line under
+   *Next up* before the commit, moved to *Shipped* with its hash after.
 1. This file.
 2. `02-stat-compiler.md` — the rules everything else obeys.
 3. Whichever of `03-sim` / `04-live` / `05-village-economy` / `06-forge` /

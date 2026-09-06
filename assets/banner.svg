@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340" role="img" aria-label="DEGEN VILLAGE — an isometric village where AI agents train in buildings and trade memecoins">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151206"/>
+      <stop offset="0.55" stop-color="#1C180D"/>
+      <stop offset="1" stop-color="#100E06"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.18" cy="0.15" r="0.75">
+      <stop offset="0" stop-color="#CCFF00" stop-opacity="0.11"/>
+      <stop offset="1" stop-color="#CCFF00" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="iso" width="56" height="32" patternUnits="userSpaceOnUse" patternTransform="translate(0 6)">
+      <path d="M0 16 L28 0 L56 16 L28 32 Z" fill="none" stroke="#CCFF00" stroke-opacity="0.07" stroke-width="1"/>
+    </pattern>
+    <clipPath id="card"><rect x="0" y="0" width="1200" height="340" rx="18"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#card)">
+    <rect width="1200" height="340" fill="url(#bg)"/>
+    <rect width="1200" height="340" fill="url(#iso)"/>
+    <rect width="1200" height="340" fill="url(#glow)"/>
+    <circle cx="1120" cy="330" r="180" fill="#CCFF00" opacity="0.035"/>
+  </g>
+  <rect x="0.5" y="0.5" width="1199" height="339" rx="18" fill="none" stroke="#CCFF00" stroke-opacity="0.28"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <!-- eyebrow -->
+    <circle cx="60" cy="55" r="4" fill="#CCFF00"/>
+    <text x="76" y="60" fill="#8fae00" font-size="14" letter-spacing="3.4">ISOMETRIC VILLAGE · LIVE MEMECOIN DESK</text>
+
+    <!-- wordmark -->
+    <text x="56" y="150" fill="#CCFF00" font-size="72" font-weight="700" letter-spacing="-1" filter="url(#soft)">degen village</text>
+
+    <!-- two lines, the whole idea -->
+    <text x="60" y="196" fill="#F2EFE0" font-size="15.5">Agents train in buildings, walk to a terminal and trade</text>
+    <text x="60" y="222" fill="#F2EFE0" font-size="15.5">the bonding curve. Every stat bar is a real config field</text>
+    <text x="60" y="248" fill="#9a9578" font-size="15.5">the engine reads — fill PTN and it genuinely thinks longer.</text>
+
+    <!-- chips -->
+    <g font-size="12.5" letter-spacing="1.6">
+      <rect x="58" y="272" width="118" height="30" rx="8" fill="#CCFF00" fill-opacity="0.10" stroke="#CCFF00" stroke-opacity="0.35"/>
+      <text x="76" y="292" fill="#CCFF00">TYPESCRIPT</text>
+
+      <rect x="186" y="272" width="196" height="30" rx="8" fill="#CCFF00" fill-opacity="0.06" stroke="#CCFF00" stroke-opacity="0.22"/>
+      <text x="204" y="292" fill="#c7e26a">ROBINHOOD CHAIN</text>
+
+      <rect x="392" y="272" width="120" height="30" rx="8" fill="#CCFF00" fill-opacity="0.06" stroke="#CCFF00" stroke-opacity="0.22"/>
+      <text x="410" y="292" fill="#c7e26a">PONS DEX</text>
+
+      <rect x="522" y="272" width="164" height="30" rx="8" fill="#CCFF00" fill-opacity="0.06" stroke="#CCFF00" stroke-opacity="0.22"/>
+      <text x="540" y="292" fill="#c7e26a">THREE HOUSES</text>
+    </g>
+
+    <!-- terminal panel -->
+    <rect x="790" y="58" width="352" height="224" rx="12" fill="#0E0C05" fill-opacity="0.85" stroke="#CCFF00" stroke-opacity="0.30"/>
+    <g font-size="14">
+      <text x="814" y="92" fill="#8fae00">&gt; houses</text>
+      <text x="1118" y="92" fill="#F2EFE0" text-anchor="end">anthropic · openai · xai</text>
+
+      <text x="814" y="124" fill="#8fae00">&gt; ladder unlock</text>
+      <text x="1118" y="124" fill="#F2EFE0" text-anchor="end">PTN 12</text>
+
+      <text x="814" y="156" fill="#8fae00">&gt; cheapest decision</text>
+      <text x="1118" y="156" fill="#CCFF00" text-anchor="end">$0.00184</text>
+
+      <text x="814" y="188" fill="#8fae00">&gt; dearest decision</text>
+      <text x="1118" y="188" fill="#CCFF00" text-anchor="end">$0.18668</text>
+
+      <text x="814" y="220" fill="#8fae00">&gt; tests</text>
+      <text x="1118" y="220" fill="#F2EFE0" text-anchor="end">124 green</text>
+
+      <text x="814" y="252" fill="#8fae00">&gt; execution</text>
+      <text x="1118" y="252" fill="#f87171" text-anchor="end">dry run until DRY_RUN=0</text>
+    </g>
+  </g>
+</svg>
