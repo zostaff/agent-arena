@@ -27,8 +27,40 @@ never of inventing something that merely sounds like progress. Each block ends
 with the honest limit, because an update that names its own gap is the one
 people believe.
 
-Where it stands today: **6,437 lines of TypeScript across 29 files, 1,509 lines
-of tests (133 green), 935 lines of spec.**
+Where it stands today: **6,900 lines of TypeScript across 31 files, 1,900 lines
+of tests (142 green), 1,000 lines of spec**, typechecked, tested and built by
+CI on every push.
+
+### 2026-09-07 · The village survives a reload, and CI publishes it — [`01d62db`](https://github.com/zostaff/agent-arena/commit/01d62db)
+
+**What changed.** `save()` / `restore()` on the village, a hostile-input
+`parseSave`, autosave every 240 ticks with a flush on tab hide, a two-click
+RESET, an error boundary, and two GitHub Actions workflows: `ci.yml`
+(typecheck → test → build on every push and PR) and `pages.yml` (same gate,
+then publish). 9 new tests.
+
+**For a post**
+
+* **Two hours of upgrades used to die on a stray Cmd-R.** Now treasury,
+  building levels, running jobs, boosts and every agent's stats, level, XP,
+  house and record come back.
+* **What deliberately does not come back: open positions.** A position is
+  priced against a market that no longer exists after a reload, so carrying one
+  over would mean inventing its P&L. The trade never closed, so it never
+  counted — unrealised P&L is discarded, not banked.
+* A save is treated exactly like a model's answer: **data from anywhere.**
+  Every number coerced and clamped, every id checked against the set the engine
+  knows, unknown buildings and boosts dropped, an unrecognised version refused
+  rather than guessed at. One test feeds it a hostile save with `spd: 999`,
+  `cls: "GODMODE"` and a negative treasury and asserts what comes out.
+* **Driving it in a real browser caught a real bug.** RESET cleared the save
+  and reloaded — and the reload fired `pagehide`, which wrote the village
+  straight back. Watching the tick counter go 36 → 28 instead of 36 → 0 is what
+  exposed it; a latch now suppresses the flush while a wipe is in flight. Unit
+  tests would never have found that one: the bug lived in the browser's
+  lifecycle, not in the engine.
+* **The honest limit:** the save is per browser. There is no account, no cloud
+  slot, and clearing site data still clears the village.
 
 ### 2026-09-06 · Cost-adjusted P&L — [`07e37de`](https://github.com/zostaff/agent-arena/commit/07e37de)
 
@@ -126,18 +158,7 @@ precisely why degrade-once exists.
 pasted into `specs/04-live.md`, and any shape correction the real response
 forced. Until then the honest claim is "typed and tested", not "working".
 
-### 2. Village state survives a reload
-
-`storage.ts` persists the board and the player identity. The village itself —
-buildings, treasury, levels, deployed builds — dies on refresh. Two hours of
-upgrades vanish on a stray Cmd-R, which makes the whole progression feel unsafe
-to invest in.
-
-**Done means:** the village serializes to `window.storage` on a debounce and
-rehydrates on boot, with a version tag so a schema change resets cleanly
-instead of crashing.
-
-### 3. `execute.ts` verified against the real router ABI before anyone unsets `DRY_RUN`
+### 2. `execute.ts` verified against the real router ABI before anyone unsets `DRY_RUN`
 
 The dry-run path prints the exact call it would send. Nobody has checked that
 call against the deployed Pons router ABI on chain 4663. `DRY_RUN=0` is one
@@ -147,7 +168,7 @@ environment variable away from being someone's real money.
 swap is asserted in a test, and the README says plainly which router address
 was verified and when.
 
-### 4. Latency measured per house, never assumed
+### 3. Latency measured per house, never assumed
 
 `BrainTrace.ms` is recorded and then thrown away. Round-trip time is a real
 difference between houses and it belongs in the HUD — as a *measurement*, with
@@ -157,7 +178,7 @@ a sample count.
 It must not feed the stat compiler: SPD is the poll interval the player bought,
 not a vendor's mood.
 
-### 5. FORGE can import a build JSON
+### 4. FORGE can import a build JSON
 
 EXPORT JSON exists; there is no way back in. A build shared outside the board
 is currently a screenshot.
@@ -165,12 +186,22 @@ is currently a screenshot.
 **Done means:** a paste box that validates and loads, rejecting unknown
 providers to the default rather than compiling an undefined ladder.
 
-### 6. The DEX overlay says which house produced each verdict
+### 5. The DEX overlay says which house produced each verdict
 
 The trade tape shows the reason, not the brain. With three houses in one
 village that is the most interesting column on the screen and it is missing.
 
 ---
+
+### 6. A cloud save slot, or an honest note that there isn't one
+
+The village now persists per browser. Open it on a phone and it is a different
+village, and clearing site data still wipes it. `window.storage` already has a
+shared mode — the board uses it — so the machinery exists.
+
+**Done means:** either a per-owner village slot that follows the player, or one
+line in the UI saying plainly that progress is local to this browser. The
+second is a fifteen-minute job and is better than an unkept implication.
 
 ## Later
 
