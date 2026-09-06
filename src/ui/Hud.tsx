@@ -14,6 +14,7 @@ import {
   PROVIDERS,
   PROVIDER_META,
   modelForPtn,
+  usdToEth,
   type BoostKind,
 } from "../core/config.js";
 import {
@@ -266,6 +267,11 @@ export function AgentInspector({
         <Row k="trades / wins" v={`${agent.trades} / ${agent.wins}`} />
         <Row k="decisions / skips" v={`${agent.decisions} / ${agent.skips}`} />
         <Row k="inference spend" v={fmtUsd(agent.spentUsd)} />
+        <Row
+          k="net of inference"
+          v={`${fmtEth(agent.realizedPnlEth + agent.unrealizedPnlEth - usdToEth(agent.spentUsd))} ETH`}
+          accent
+        />
       </div>
 
       {agent.verdict && (

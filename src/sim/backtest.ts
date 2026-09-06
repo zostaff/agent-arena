@@ -4,10 +4,26 @@
  * Seed 42, 7000 ticks, one agent, blocking decisions. Two runs of the same
  * build return byte-identical numbers; that is what makes the BUILDS
  * leaderboard a leaderboard and not a lottery.
+ *
+ * GROSS IS HOUSE-INDEPENDENT. The sim brain is a heuristic that never reads a
+ * model id, so the same build produces the same trades on Anthropic, OpenAI
+ * and xAI, to the tick. The house shows up on the COST side only — which is
+ * why `netByHouse` can price all three from a single run instead of three.
+ *
+ * NET IS THE HONEST NUMBER. A build that clears +0.02 ETH gross while burning
+ * $9 of GPT-6 Astra lost money. Gross alone was defensible when every agent
+ * billed $0.01186 a decision; with houses 100x apart on price it is a lie by
+ * omission, so every result carries both.
  */
 
-import type { StrategyParams } from "../core/types.js";
+import type { Provider, StrategyParams } from "../core/types.js";
 import type { Stats } from "../core/config.js";
+import {
+  PROVIDERS,
+  compileConfig,
+  normalizeProvider,
+  usdToEth,
+} from "../core/config.js";
 import { CLASS_STRATEGY } from "../core/brain.js";
 import { Village } from "../core/village.js";
 import { mulberry32 } from "./rng.js";
@@ -23,6 +39,8 @@ export interface BacktestBuild {
   stats: Stats;
   strategy: StrategyParams;
   systemSuffix?: string;
+  /** House the build is wired to. Changes the bill, never the trades. */
+  provider?: Provider;
 }
 
 export interface BacktestResult {
@@ -38,9 +56,24 @@ export interface BacktestResult {
   equity: number[];
   skips: number;
   decisions: number;
+  /** Inference spend on the build's own house, in USD. */
   spentUsd: number;
+  /** `spentUsd` at ASSUMED_ETH_USD. */
+  spentEth: number;
+  /** pnlEth - spentEth. The number that decides whether the build made money. */
+  netEth: number;
+  provider: Provider;
+  /** Constant across the run: the agent is frozen, so its config never moves. */
+  costPerDecisionUsd: number;
   finalLevel: number;
   finalStats: Stats;
+}
+
+export interface HouseNet {
+  provider: Provider;
+  model: string;
+  spentUsd: number;
+  netEth: number;
 }
 
 /** The build every FORGE result is measured against. */
@@ -49,6 +82,26 @@ export const BASELINE_BUILD: BacktestBuild = {
   stats: { spd: 4, rsk: 5, ptn: 7, gas: 4 },
   strategy: { ...CLASS_STRATEGY.SNIPER },
 };
+
+/**
+ * What this run would have netted on each of the three houses.
+ *
+ * Derivable from one run because the agent is frozen — its stats never move,
+ * so `costPerDecision` is a constant and the whole bill is
+ * `decisions * costPerDecision`. No second simulation required.
+ */
+export function netByHouse(result: BacktestResult): HouseNet[] {
+  return PROVIDERS.map((provider) => {
+    const cfg = compileConfig(result.finalStats, 0, [], { provider });
+    const spentUsd = result.decisions * cfg.costPerDecision;
+    return {
+      provider,
+      model: cfg.model,
+      spentUsd,
+      netEth: result.pnlEth - usdToEth(spentUsd),
+    };
+  });
+}
 
 export interface BacktestOptions {
   seed?: number;
@@ -84,6 +137,7 @@ export async function backtest(
         systemSuffix: build.systemSuffix ?? "",
         custom: true,
         frozen: true,
+        provider: build.provider,
       },
     ],
   });
@@ -104,6 +158,9 @@ export async function backtest(
   }
   equity.push(agent.netPnlEth);
 
+  const spentEth = usdToEth(agent.spentUsd);
+  const config = village.configFor(agent);
+
   return {
     name: build.name,
     seed,
@@ -117,6 +174,10 @@ export async function backtest(
     skips: agent.skips,
     decisions: agent.decisions,
     spentUsd: agent.spentUsd,
+    spentEth,
+    netEth: agent.netPnlEth - spentEth,
+    provider: normalizeProvider(build.provider),
+    costPerDecisionUsd: config.costPerDecision,
     finalLevel: agent.level,
     finalStats: { ...agent.stats },
   };
@@ -126,26 +187,38 @@ export interface BacktestComparison {
   build: BacktestResult;
   baseline: BacktestResult;
   pnlDelta: number;
+  /** Delta AFTER inference, on the same house for both. This drives verdict. */
+  netDelta: number;
   winRateDelta: number;
   drawdownDelta: number;
   verdict: "BETTER" | "WORSE" | "EVEN";
+  /** The same build's net on each of the three houses. */
+  houses: HouseNet[];
 }
 
 export async function backtestAgainstBaseline(
   build: BacktestBuild,
   options: BacktestOptions = {},
 ): Promise<BacktestComparison> {
+  /* The baseline runs on the SAME house, so the comparison stays a comparison
+     of builds. Gross is house-independent anyway; this keeps net honest too. */
+  const provider = normalizeProvider(build.provider);
   const [a, b] = await Promise.all([
     backtest(build, options),
-    backtest(BASELINE_BUILD, options),
+    backtest({ ...BASELINE_BUILD, provider }, options),
   ]);
   const pnlDelta = a.pnlEth - b.pnlEth;
+  const netDelta = a.netEth - b.netEth;
   return {
     build: a,
     baseline: b,
     pnlDelta,
+    netDelta,
     winRateDelta: a.winRate - b.winRate,
     drawdownDelta: a.maxDrawdownEth - b.maxDrawdownEth,
-    verdict: pnlDelta > 1e-9 ? "BETTER" : pnlDelta < -1e-9 ? "WORSE" : "EVEN",
+    /* Verdict follows the net: a build that wins gross and loses after the
+       bill did not win. */
+    verdict: netDelta > 1e-9 ? "BETTER" : netDelta < -1e-9 ? "WORSE" : "EVEN",
+    houses: netByHouse(a),
   };
 }

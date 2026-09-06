@@ -19,6 +19,7 @@ read the code today** comes before what would impress them.
 
 | Date | What | Commit |
 |---|---|---|
+| 2026-09-06 | **Cost-adjusted P&L.** The inference bill is subtracted: `ASSUMED_ETH_USD`, net beside gross everywhere, FORGE verdict and BUILDS board ranked on net (`BOARD_KEY` → `dv_board_v2`), the same run priced on all three houses from one backtest, net-of-inference row in the agent inspector. 9 new tests. | `pending` |
 | 2026-09-06 | **Three houses.** Agents wired to Anthropic, OpenAI or xAI; ladder, pricing and wire contract per house; FORGE picker, REWIRE for 60 coins, `AGENT_PROVIDERS`; degrade-once on a rejected parameter; 29 new tests. | `8534cae` |
 | 2026-09-06 | **DEGEN VILLAGE v0.1.** Stat compiler, village economy, agent state machine, seeded sim + deterministic backtest, live Anthropic brain, Bitquery market, viem execution in dry run, isometric SVG UI, FORGE, board. 95 tests. | `7b9d892` |
 
@@ -37,18 +38,7 @@ precisely why degrade-once exists.
 pasted into `specs/04-live.md`, and any shape correction the real response
 forced. Until then the honest claim is "typed and tested", not "working".
 
-### 2. Cost-adjusted P&L
-
-The village already tracks `spentUsd` per agent. The backtest does not price a
-single decision — it reports gross P&L only. That was defensible when every
-agent burned the same $0.01186; with houses 100x apart on price it is a lie by
-omission. A build that scores +0.02 ETH on GPT-6 Astra may be losing money.
-
-**Done means:** `backtest.ts` reports net-of-inference P&L alongside gross, the
-FORGE shows both, and the BUILDS board ranks by net. Bump `BOARD_KEY` — old
-entries are not comparable.
-
-### 3. Village state survives a reload
+### 2. Village state survives a reload
 
 `storage.ts` persists the board and the player identity. The village itself —
 buildings, treasury, levels, deployed builds — dies on refresh. Two hours of
@@ -59,7 +49,7 @@ to invest in.
 rehydrates on boot, with a version tag so a schema change resets cleanly
 instead of crashing.
 
-### 4. `execute.ts` verified against the real router ABI before anyone unsets `DRY_RUN`
+### 3. `execute.ts` verified against the real router ABI before anyone unsets `DRY_RUN`
 
 The dry-run path prints the exact call it would send. Nobody has checked that
 call against the deployed Pons router ABI on chain 4663. `DRY_RUN=0` is one
@@ -69,7 +59,7 @@ environment variable away from being someone's real money.
 swap is asserted in a test, and the README says plainly which router address
 was verified and when.
 
-### 5. Latency measured per house, never assumed
+### 4. Latency measured per house, never assumed
 
 `BrainTrace.ms` is recorded and then thrown away. Round-trip time is a real
 difference between houses and it belongs in the HUD — as a *measurement*, with
@@ -79,7 +69,7 @@ a sample count.
 It must not feed the stat compiler: SPD is the poll interval the player bought,
 not a vendor's mood.
 
-### 6. FORGE can import a build JSON
+### 5. FORGE can import a build JSON
 
 EXPORT JSON exists; there is no way back in. A build shared outside the board
 is currently a screenshot.
@@ -87,7 +77,7 @@ is currently a screenshot.
 **Done means:** a paste box that validates and loads, rejecting unknown
 providers to the default rather than compiling an undefined ladder.
 
-### 7. The DEX overlay says which house produced each verdict
+### 6. The DEX overlay says which house produced each verdict
 
 The trade tape shows the reason, not the brain. With three houses in one
 village that is the most interesting column on the screen and it is missing.
@@ -96,7 +86,12 @@ village that is the most interesting column on the screen and it is missing.
 
 ## Later
 
-* Rank rival villages by cost-adjusted net, not gross.
+* Rank rival villages by cost-adjusted net, not gross — the BUILDS board now
+  does it, the VILLAGES board still ranks on gross session P&L.
+* The FORGE and DEX overlays assume a wide viewport: at ~1200px the right-hand
+  column is the first thing to suffer. Noticed while screenshotting the net
+  cells on 2026-09-06; not urgent, but it is a real edge and it is written down
+  rather than forgotten.
 * Replay export: a seed plus a build is already a reproducible run; make it a
   shareable file.
 * Mobile layout for the village scene (the HUD assumes a wide viewport).

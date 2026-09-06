@@ -311,7 +311,7 @@ button, input, textarea { font-family: var(--mono); }
 .dv-remaining { color: var(--accent); }
 .dv-over { color: var(--down); }
 
-.dv-bt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0; }
+.dv-bt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
 .dv-bt-cell { padding: 6px 8px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-edge); }
 .dv-bt-label { color: var(--ink-dim); font-size: 8.5px; letter-spacing: 0.12em; }
 .dv-bt-a { font-size: 13px; font-weight: 700; }
@@ -331,7 +331,7 @@ button, input, textarea { font-family: var(--mono); }
 .dv-board-note { color: var(--ink-dim); font-size: 9px; margin-bottom: 8px; }
 .dv-board-table { display: flex; flex-direction: column; }
 .dv-board-row {
-  display: grid; grid-template-columns: 24px 120px 92px 1fr 78px 46px 72px 60px;
+  display: grid; grid-template-columns: 24px 116px 84px 1fr 78px 72px 42px 66px 56px;
   gap: 8px; font-size: 10px; padding: 3px 0;
   border-bottom: 1px solid rgba(204, 255, 0, 0.06);
   align-items: center;

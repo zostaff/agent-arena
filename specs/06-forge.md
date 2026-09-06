@@ -51,10 +51,17 @@ effort rung, position size, slippage, fees, cost per decision, and max tokens.
 
 ## Backtest
 
-Seed 42, 7000 ticks, deterministic (`specs/03-sim.md`). Reports P&L, win rate,
-max drawdown and trade count against the **SNIPER preset** baseline
-(`SPD 4 / RSK 5 / PTN 7 / GAS 4`), plus an equity curve drawn over the
-baseline's.
+Seed 42, 7000 ticks, deterministic (`specs/03-sim.md`). Six cells against the
+**SNIPER preset** baseline (`SPD 4 / RSK 5 / PTN 7 / GAS 4`, run on the same
+house): **NET after inference**, gross P&L, win rate, max drawdown, trades,
+spend and decisions — plus an equity curve drawn over the baseline's.
+
+Underneath, **THE SAME RUN, PRICED ON EACH HOUSE**: what this build would have
+netted on Anthropic, OpenAI and xAI, with the build's own house highlighted.
+One run, three prices — see `netByHouse` in `03-sim.md`.
+
+The verdict line reads off the **net** delta. A build that wins gross and loses
+after the bill does not get to say BETTER.
 
 ## Actions
 

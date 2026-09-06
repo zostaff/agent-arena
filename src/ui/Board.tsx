@@ -75,7 +75,8 @@ function BuildsTable({
         <span>BUILD</span>
         <span>OWNER</span>
         <span>STATS</span>
-        <span>P&amp;L</span>
+        <span>NET</span>
+        <span>GROSS</span>
         <span>WR</span>
         <span>MAX DD</span>
         <span />
@@ -88,7 +89,14 @@ function BuildsTable({
           <span className="dv-board-stats">
             {STAT_KEYS.map((k) => `${STAT_LABEL[k]}${e.stats[k]}`).join(" ")}
           </span>
-          <span style={{ color: e.pnlEth >= 0 ? PALETTE.up : PALETTE.down }}>{fmtEth(e.pnlEth, 4)}</span>
+          <span
+            style={{ color: (e.netEth ?? e.pnlEth) >= 0 ? PALETTE.up : PALETTE.down }}
+            title={e.netEth === undefined ? "published before net was tracked — gross shown" : undefined}
+          >
+            {fmtEth(e.netEth ?? e.pnlEth, 4)}
+            {e.netEth === undefined ? "*" : ""}
+          </span>
+          <span className="dv-board-owner">{fmtEth(e.pnlEth, 4)}</span>
           <span>{(e.winRate * 100).toFixed(0)}%</span>
           <span>{e.maxDrawdownEth.toFixed(4)}</span>
           <span>

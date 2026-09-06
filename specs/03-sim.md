@@ -74,10 +74,41 @@ SNIPER −0.35 (it skips more than it trades).
 
 Seed 42, 7000 ticks, one **frozen** agent (never trains, never gains stat
 points — the numbers measure the authored build), blocking decisions.
-Returns P&L, trades, win rate, max drawdown, a 120-point equity curve, skips,
-decisions, and inference spend. `backtestAgainstBaseline` runs the same
-protocol against `BASELINE_BUILD` — the SNIPER preset, `SPD 4 / RSK 5 / PTN 7 /
-GAS 4` — and reports BETTER / WORSE / EVEN.
+Returns gross P&L, trades, win rate, max drawdown, a 120-point equity curve,
+skips, decisions, inference spend, and **net**. `backtestAgainstBaseline` runs
+the same protocol against `BASELINE_BUILD` — the SNIPER preset,
+`SPD 4 / RSK 5 / PTN 7 / GAS 4` — **on the same house** — and reports
+BETTER / WORSE / EVEN.
 
 Two runs of the same build return byte-identical results. That is what makes
 the BUILDS leaderboard a leaderboard and not a lottery.
+
+### Net, and why the verdict follows it
+
+```
+spentEth = spentUsd / ASSUMED_ETH_USD      // config.ts, the one assumed price
+netEth   = pnlEth - spentEth
+verdict  = sign(build.netEth - baseline.netEth)
+```
+
+A build that clears +0.02 ETH gross while burning $9 of GPT-6 Astra lost money.
+Gross alone was defensible when every agent billed $0.01186 a decision; with
+houses 100x apart on price it is a lie by omission, so both numbers are always
+reported and the **verdict reads off the net**.
+
+The baseline runs on the *same house* as the build, so the comparison stays a
+comparison of builds rather than of vendors.
+
+### Gross is house-independent — and that is load-bearing
+
+`heuristicBrain` never reads a model id. The same build therefore produces the
+same trades, tick for tick, on all three houses; only the bill moves.
+`tests/net.test.ts` asserts equality of `pnlEth`, `trades`, `decisions` and the
+whole equity array across two houses — if the sim ever leaked the model into a
+decision, that assertion is what catches it.
+
+That property is also what makes `netByHouse(result)` free: the agent is
+frozen, so `costPerDecision` is constant, the whole bill is
+`decisions * costPerDecision`, and all three houses can be priced from **one**
+run instead of three. The FORGE uses it to show what the same build would net
+on each house.

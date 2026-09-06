@@ -180,6 +180,8 @@ export function App(): React.ReactElement {
         owner: me.owner,
         at: Date.now(),
         pnlEth: result.build.pnlEth,
+        netEth: result.build.netEth,
+        spentUsd: result.build.spentUsd,
         winRate: result.build.winRate,
         maxDrawdownEth: result.build.maxDrawdownEth,
         trades: result.build.trades,

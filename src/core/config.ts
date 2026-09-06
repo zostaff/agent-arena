@@ -152,6 +152,23 @@ export const MODEL_PRICING: Readonly<Record<string, ModelPricing>> =
     "grok-4.6": { inputPerMTok: 2, outputPerMTok: 6 },
   });
 
+/**
+ * The one number in this repo that is an ASSUMPTION rather than a measurement:
+ * the ETH/USD rate used to express inference spend in the same unit as trading
+ * P&L. $2,506 spot on 2026-09-06, rounded down to a round number so nobody
+ * mistakes it for a live quote.
+ *
+ * Every figure derived from it is labelled "net" and is never folded into a
+ * gross number. Edit this one constant and every net in the village moves with
+ * it; nothing else in the engine reads a dollar price.
+ */
+export const ASSUMED_ETH_USD = 2500;
+
+/** Inference dollars expressed in ETH, at the assumed rate. */
+export function usdToEth(usd: number): number {
+  return usd / ASSUMED_ETH_USD;
+}
+
 /** Base position size in ETH before RSK and level scaling. */
 export const BASE_POSITION_ETH = 0.05;
 

@@ -2,7 +2,7 @@
 
 <img src="assets/banner.png" alt="DEGEN VILLAGE — an isometric village where AI agents train in buildings and trade memecoins" width="100%">
 
-![tests](https://img.shields.io/badge/tests-124%20green-CCFF00?style=flat-square&labelColor=1C180D)
+![tests](https://img.shields.io/badge/tests-133%20green-CCFF00?style=flat-square&labelColor=1C180D)
 ![typescript](https://img.shields.io/badge/typescript-5.7-8fae00?style=flat-square&labelColor=1C180D)
 ![houses](https://img.shields.io/badge/houses-anthropic%20·%20openai%20·%20xai-c7e26a?style=flat-square&labelColor=1C180D)
 ![execution](https://img.shields.io/badge/execution-dry%20run%20by%20default-f87171?style=flat-square&labelColor=1C180D)
@@ -24,7 +24,7 @@ config editor with a progress bar in front of it.
 
 ```bash
 npm install
-npm test        # 124 tests, ~1s
+npm test        # 133 tests, ~1s
 npm run sim     # MODE=sim — seeded, deterministic, free
 npm run dev     # the village in a browser
 ```
@@ -60,6 +60,23 @@ become a balance lever.
 
 Adding a fourth house is one entry in `MODEL_LADDERS`, one in `MODEL_PRICING`,
 one `WireAdapter`, and one line in the router.
+
+## The bill is subtracted
+
+A build that clears +0.02 ETH gross while burning $9 of GPT-6 Astra lost money.
+So the backtest reports **net of inference** beside gross, and the FORGE
+verdict and the BUILDS board both rank on net.
+
+```
+spentEth = spentUsd / ASSUMED_ETH_USD     # one assumed price, one constant
+netEth   = pnlEth - spentEth
+```
+
+The sim brain never reads a model id, so **gross is identical across houses,
+tick for tick** — a test compares the whole equity array to prove it. Only the
+bill moves. That is also why the FORGE can show what the same run would net on
+**all three houses from a single backtest**: the backtest agent is frozen, so
+`costPerDecision` is constant and the whole bill is `decisions × cost`.
 
 ## The stat compiler
 
@@ -145,12 +162,12 @@ Written so a future session can pick up any part without re-reading the code.
 | [00 — Overview](specs/00-overview.md) | architecture, file map, reading order |
 | [01 — Core contracts](specs/01-core-contracts.md) | `Market`, `Brain`, `Snapshot`, `Verdict`, agent states, class lenses |
 | [02 — Stat compiler](specs/02-stat-compiler.md) | every formula, the three ladders, pricing, boosts, boundary table |
-| [03 — Sim](specs/03-sim.md) | mulberry32, the random walk and its tuning, heuristic brain, backtest |
+| [03 — Sim](specs/03-sim.md) | mulberry32, the random walk and its tuning, heuristic brain, backtest, net-of-inference |
 | [04 — Live](specs/04-live.md) | all three wire contracts **and their forced deviations**, degrade-once, Bitquery queries, viem execution |
 | [05 — Village economy](specs/05-village-economy.md) | buildings, costs, times, RUSH, boosts, REWIRE, treasury, fills |
 | [06 — FORGE](specs/06-forge.md) | stat budget, house picker, strategy params, prompt suffix, backtest, deploy |
 | [07 — UI](specs/07-ui.md) | projection, SVG anatomy, HUD, REWIRE panel, DEX overlay, palette |
-| [08 — Multiplayer](specs/08-multiplayer.md) | `window.storage`, the two rankings, load-a-rival's-build |
+| [08 — Multiplayer](specs/08-multiplayer.md) | `window.storage`, ranking on net, `BOARD_KEY` v2, load-a-rival's-build |
 | [09 — Tests](specs/09-tests.md) | what each file covers and which assertions are load-bearing |
 
 ## Environment

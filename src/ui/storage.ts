@@ -10,7 +10,9 @@
 import type { Stats } from "../core/config.js";
 import type { StrategyParams, Provider } from "../core/types.js";
 
-export const BOARD_KEY = "dv_board_v1";
+/* v2: builds carry net-of-inference. v1 entries ranked on gross and are not
+   comparable, so they are left behind rather than migrated. */
+export const BOARD_KEY = "dv_board_v2";
 export const ME_KEY = "dv_me";
 
 interface HostStorage {
@@ -73,8 +75,12 @@ export interface BuildEntry {
   name: string;
   owner: string;
   at: number;
-  /** Backtest P&L on seed 42. Deterministic, therefore comparable. */
+  /** Gross backtest P&L on seed 42. Deterministic, therefore comparable. */
   pnlEth: number;
+  /** P&L after the inference bill on this build's house. The ranked number. */
+  netEth?: number;
+  /** What the run cost in inference, USD. */
+  spentUsd?: number;
   winRate: number;
   maxDrawdownEth: number;
   trades: number;
@@ -136,7 +142,9 @@ export async function publishBuild(entry: BuildEntry): Promise<Board> {
   const board = await loadBoard();
   const builds = board.builds.filter((b) => b.id !== entry.id);
   builds.push(entry);
-  builds.sort((a, b) => b.pnlEth - a.pnlEth);
+  /* Ranked on net. An entry from before v2 falls back to its gross figure,
+     which is the most favourable reading of it — and it says so in the table. */
+  builds.sort((a, b) => (b.netEth ?? b.pnlEth) - (a.netEth ?? a.pnlEth));
   const next: Board = { ...board, builds: builds.slice(0, 50) };
   await writeKey(BOARD_KEY, next, true);
   return next;

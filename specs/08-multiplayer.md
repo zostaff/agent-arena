@@ -9,24 +9,32 @@ local to that browser. `isShared()` reports which, and the board says so.
 
 | Key | Shared | Contents |
 |---|---|---|
-| `dv_board_v1` | yes | `{ builds: BuildEntry[], villages: VillageEntry[] }` |
+| `dv_board_v2` | yes | `{ builds: BuildEntry[], villages: VillageEntry[] }` |
 | `dv_me` | no | `{ owner, lastBuildId }` |
 
 `owner` is generated once as `degen-xxxxx` and persisted.
 
 ## Two rankings
 
-* **BUILDS** — deterministic backtest P&L on seed 42. A skill score: same
-  build, same number, on anyone's machine.
+* **BUILDS** — deterministic backtest **net of inference** on seed 42. A skill
+  score: same build, same number, on anyone's machine. Gross is shown beside it
+  in a dim column, because the gap between the two is the interesting part.
+  Entries published before v2 carry no net; they fall back to their gross with
+  an asterisk rather than being silently ranked as if the bill were zero.
 * **VILLAGES** — live session net P&L (realised + unrealised across the whole
   roster). An economy score: it rewards buildings, boosts and treasury play.
 
 Both lists are sorted descending and capped at 50 entries.
 
+**`BOARD_KEY` moved `dv_board_v1` → `dv_board_v2`** when net ranking landed:
+v1 entries were ranked on gross and are not comparable, so they are left behind
+rather than migrated.
+
 ## Loading a rival's build
 
-Tapping **LOAD** on any BUILDS row writes that entry's stats, strategy and
-system prompt suffix straight into the FORGE draft. Copy a build, tweak one
+Tapping **LOAD** on any BUILDS row writes that entry's stats, strategy, system
+prompt suffix and house straight into the FORGE draft (an entry from before
+houses existed loads as Anthropic). Copy a build, tweak one
 slider, re-run the backtest, publish under your own name.
 
 ## Races

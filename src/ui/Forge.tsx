@@ -103,6 +103,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
         stats: draft.stats,
         strategy: draft.strategy,
         systemSuffix: draft.systemSuffix,
+        provider: draft.provider,
       });
       setResult(cmp);
     } finally {
@@ -123,9 +124,12 @@ export function Forge(props: ForgeProps): React.ReactElement {
             seed: result.build.seed,
             ticks: result.build.ticks,
             pnlEth: result.build.pnlEth,
+            spentUsd: result.build.spentUsd,
+            netEth: result.build.netEth,
             winRate: result.build.winRate,
             maxDrawdownEth: result.build.maxDrawdownEth,
             trades: result.build.trades,
+            houses: result.houses,
           }
         : null,
     };
@@ -280,7 +284,13 @@ export function Forge(props: ForgeProps): React.ReactElement {
           {result && (
             <>
               <div className="dv-bt-grid">
-                <BtCell label="P&L" a={fmtEth(result.build.pnlEth, 4)} b={fmtEth(result.baseline.pnlEth, 4)} good={result.pnlDelta >= 0} />
+                <BtCell
+                  label="NET · after inference"
+                  a={fmtEth(result.build.netEth, 4)}
+                  b={fmtEth(result.baseline.netEth, 4)}
+                  good={result.netDelta >= 0}
+                />
+                <BtCell label="P&L gross" a={fmtEth(result.build.pnlEth, 4)} b={fmtEth(result.baseline.pnlEth, 4)} good={result.pnlDelta >= 0} />
                 <BtCell
                   label="WIN RATE"
                   a={`${(result.build.winRate * 100).toFixed(0)}%`}
@@ -299,10 +309,48 @@ export function Forge(props: ForgeProps): React.ReactElement {
                   b={String(result.baseline.trades)}
                   good
                 />
+                <BtCell
+                  label="SPEND"
+                  a={fmtUsd(result.build.spentUsd)}
+                  b={fmtUsd(result.baseline.spentUsd)}
+                  good={result.build.spentUsd <= result.baseline.spentUsd}
+                />
+                <BtCell
+                  label="DECISIONS"
+                  a={String(result.build.decisions)}
+                  b={String(result.baseline.decisions)}
+                  good
+                />
+              </div>
+
+              <div className="dv-compiled-title">
+                THE SAME RUN, PRICED ON EACH HOUSE
+              </div>
+              <div className="dv-compiled">
+                {result.houses.map((h) => (
+                  <div className="dv-row" key={h.provider}>
+                    <span className="dv-row-k">
+                      {PROVIDER_META[h.provider].label} · {h.model}
+                    </span>
+                    <span
+                      className="dv-row-v"
+                      style={{
+                        color:
+                          h.provider === draft.provider
+                            ? PALETTE.accent
+                            : h.netEth >= 0
+                              ? PALETTE.up
+                              : PALETTE.down,
+                      }}
+                    >
+                      {fmtEth(h.netEth, 4)} net · {fmtUsd(h.spentUsd)}
+                    </span>
+                  </div>
+                ))}
               </div>
               <EquityCurve build={result.build.equity} baseline={result.baseline.equity} />
               <div className={`dv-bt-verdict dv-bt-${result.verdict.toLowerCase()}`}>
-                {result.verdict} THAN SNIPER PRESET · {fmtEth(result.pnlDelta, 4)} ETH
+                {result.verdict} THAN SNIPER PRESET · {fmtEth(result.netDelta, 4)} ETH NET
               </div>
             </>
           )}

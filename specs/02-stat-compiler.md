@@ -93,6 +93,20 @@ than a *quarter* of an Opus 5 decision at PTN 0. OpenAI is the widest jump:
 Terra is cheap to run and Astra is not. Both frontier rungs bill $10/$50, so
 Astra and Fable 5.1 cost the same per decision to the cent.
 
+## `ASSUMED_ETH_USD` — the one assumed price
+
+`costPerDecision` is in USD; P&L is in ETH. Putting them in one unit needs a
+rate, and a rate is an assumption, so it lives alone in one exported constant:
+
+```ts
+export const ASSUMED_ETH_USD = 2500;   // $2,506 spot 2026-09-06, rounded
+export function usdToEth(usd: number) { return usd / ASSUMED_ETH_USD; }
+```
+
+Nothing else in the engine reads a dollar price. Every figure derived from it
+is labelled **net** and is never folded into a gross number, so editing this
+constant moves every net in the village and nothing else.
+
 ## Boosts — temporary config overrides
 
 Applied after the base compile, then the cost is recomputed (ALPHA FEED
