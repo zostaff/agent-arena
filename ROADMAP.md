@@ -6,9 +6,13 @@
 
 **Every improvement lands here first.** A change that is worth making is worth
 one line in *Next up* before it is worth a commit; a change that shipped moves
-to *Shipped* with its date and hash. If something was considered and rejected,
-it goes to *Not doing* with the reason, so the same idea does not get
-re-litigated in six months.
+to *Shipped* with its date, its hash, and a **For a post** block — the checked
+facts and numbers behind it. If something was considered and rejected, it goes
+to *Not doing* with the reason, so the same idea does not get re-litigated in
+six months.
+
+Nothing in a *For a post* block is aspirational. If a number is not measured
+yet, it is written as the limit instead of as the achievement.
 
 The ordering rule for *Next up*: **what would embarrass the project if someone
 read the code today** comes before what would impress them.
@@ -17,11 +21,95 @@ read the code today** comes before what would impress them.
 
 ## Shipped
 
-| Date | What | Commit |
-|---|---|---|
-| 2026-09-06 | **Cost-adjusted P&L.** The inference bill is subtracted: `ASSUMED_ETH_USD`, net beside gross everywhere, FORGE verdict and BUILDS board ranked on net (`BOARD_KEY` → `dv_board_v2`), the same run priced on all three houses from one backtest, net-of-inference row in the agent inspector. 9 new tests. | `07e37de` |
-| 2026-09-06 | **Three houses.** Agents wired to Anthropic, OpenAI or xAI; ladder, pricing and wire contract per house; FORGE picker, REWIRE for 60 coins, `AGENT_PROVIDERS`; degrade-once on a rejected parameter; 29 new tests. | `8534cae` |
-| 2026-09-06 | **DEGEN VILLAGE v0.1.** Stat compiler, village economy, agent state machine, seeded sim + deterministic backtest, live Anthropic brain, Bitquery market, viem execution in dry run, isometric SVG UI, FORGE, board. 95 tests. | `7b9d892` |
+Every entry carries a **For a post** block: facts and numbers that are already
+checked, so writing an update is a matter of picking which line to lead with —
+never of inventing something that merely sounds like progress. Each block ends
+with the honest limit, because an update that names its own gap is the one
+people believe.
+
+Where it stands today: **6,437 lines of TypeScript across 29 files, 1,509 lines
+of tests (133 green), 935 lines of spec.**
+
+### 2026-09-06 · Cost-adjusted P&L — [`07e37de`](https://github.com/zostaff/agent-arena/commit/07e37de)
+
+**What changed.** The inference bill is subtracted from the result. `netEth =
+pnlEth - spentUsd / ASSUMED_ETH_USD`; net sits beside gross everywhere; the
+FORGE verdict and the BUILDS board rank on net (`BOARD_KEY` → `dv_board_v2`);
+one backtest now prices the same run on all three houses; the agent inspector
+gained a net-of-inference row. 9 new tests.
+
+**For a post**
+
+* A build that clears **+0.02 ETH gross while burning $9 of GPT-6 Astra lost
+  money.** That sentence is the whole feature.
+* Gross alone was defensible while every agent billed **$0.01186** a decision.
+  With three houses **100x apart** on price it became a lie by omission.
+* **One run, three prices.** The backtest agent is frozen, so cost per decision
+  is constant and the whole bill is `decisions × cost` — all three houses get
+  priced from a single simulation instead of three.
+* The leaderboard key moved to v2 rather than migrating old rows: entries
+  ranked on gross **are not comparable** to entries ranked on net, and pre-v2
+  rows show their gross with an asterisk instead of pretending the bill was
+  zero.
+* One assumed number in the whole engine: **ETH at $2,500** (spot was $2,506
+  that day). It lives alone in one constant, and everything derived from it is
+  labelled *net*.
+* **The honest limit:** this is a seeded simulation, not a live P&L. It
+  measures builds against each other, not the market.
+
+### 2026-09-06 · Three houses — [`8534cae`](https://github.com/zostaff/agent-arena/commit/8534cae)
+
+**What changed.** Every agent is wired to Anthropic, OpenAI or xAI. Ladder,
+pricing and wire contract per house; FORGE picker; REWIRE for 60 coins;
+`AGENT_PROVIDERS`; degrade-once on a rejected parameter. 29 new tests.
+
+**For a post**
+
+* Three houses, six models, one unlock point: **PTN 12** opens the frontier
+  rung on all three ladders.
+* The price spread is the game: **$0.00184** a decision on Grok 4.3 against
+  **$0.18668** on GPT-6 Astra — **101x**. A whole frontier Grok 4.6 decision
+  (96 candles, 3000 reasoning tokens) costs **less than a quarter** of an
+  Opus 5 decision at the bottom of its ladder.
+* GPT-6 Astra and Fable 5.1 both bill **$10/$50** per million, so at the top
+  they cost the same to the cent. The difference is what you paid on the way up.
+* **The house changes exactly three things**: the model id on the wire, the
+  price per decision, and which parameters the request may legally carry. A
+  test asserts poll interval, context depth, size and slippage are identical
+  across houses — so it can never quietly become a balance lever.
+* **xAI is the only house that still accepts `temperature: 0`.** OpenAI removed
+  sampling parameters on GPT-6 Astra and the GPT-5.6 family; Anthropic removed
+  them on Opus 5 and Fable 5.1. The determinism the original brief asked for
+  survives on exactly one of the three wires.
+* **Degrade-once:** a 400 body is read, not just counted. If it names a
+  parameter, the request goes again immediately without it, outside the retry
+  budget. A silently dead house is worse than a slightly slower one.
+* **The honest limit:** the OpenAI and xAI wires are typed and tested against
+  fixtures. Neither has answered this code for real yet — that is item 1 in
+  *Next up*, and it stays worded that way until it has.
+
+### 2026-09-06 · DEGEN VILLAGE v0.1 — [`7b9d892`](https://github.com/zostaff/agent-arena/commit/7b9d892)
+
+**What changed.** The whole thing: stat compiler, village economy, agent state
+machine, seeded sim, deterministic backtest, live Anthropic brain, Bitquery
+market, viem execution in dry run, isometric SVG UI, FORGE, board. 95 tests.
+
+**For a post**
+
+* **Every stat bar is a real config field the engine reads.** Fill SPD and the
+  poll interval genuinely drops: `max(400, 3200 - spd × 260)`. Nothing on the
+  screen is decorative.
+* `src/core` **imports nothing at all** — that is what lets the same engine run
+  in node and in a browser, and what makes a 7,000-tick backtest and a live
+  session comparable.
+* **Two runs of the same build return byte-identical numbers.** That is what
+  makes the leaderboard a leaderboard and not a lottery.
+* `decide()` **never throws.** Parse failure, bad status, timeout, transport
+  error, empty content, refusal, missing key — all of it resolves to SKIP.
+* The model is **never trusted on size**: `sizeEth` is clamped after parsing,
+  every time, including on the sell path.
+* **The honest limit:** execution defaults to `dryRun: true` and prints the
+  call it would have sent. It has never signed a transaction.
 
 ---
 
