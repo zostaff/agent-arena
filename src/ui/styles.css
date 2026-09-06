@@ -92,6 +92,21 @@ button, input, textarea { font-family: var(--mono); }
 .dv-btn-wide { width: 100%; margin-top: 6px; }
 .dv-btn-boost span { color: var(--accent); margin-left: 4px; }
 
+/* ------------------------------------------------------------------ house */
+
+/* The house picker: three buttons that change the model id on the wire. */
+.dv-house { margin-bottom: 8px; }
+.dv-house-row { display: flex; gap: 4px; }
+.dv-house-btn { flex: 1; padding: 5px 4px; font-size: 9px; }
+.dv-house-on { background: rgba(204, 255, 0, 0.08); }
+.dv-house-models { margin-top: 6px; }
+.dv-house-note {
+  margin-top: 5px;
+  font-size: 9px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+
 /* ------------------------------------------------------------------ scene */
 
 .dv-main { position: relative; flex: 1; overflow: hidden; }

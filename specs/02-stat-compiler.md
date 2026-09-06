@@ -22,26 +22,47 @@ compileConfig(stats, level, boosts, options) -> CompiledConfig
 to `[0, MAX_STAT = 15]`, and non-finite input becomes 0 — the compiler never
 trusts its caller either.
 
-## The model ladder
+## Three houses, three ladders
+
+An agent is wired to one **provider** — Anthropic, OpenAI or xAI — and trains
+inside that house's ladder. `MODEL_LADDERS` in `config.ts` is the only table
+that has to change when a vendor re-prices or ships a new frontier model.
 
 ```ts
-const MODEL_LADDER = [
-  { minPtn: 0,  id: "claude-opus-5" },
-  { minPtn: 12, id: "claude-fable-5-1" },
-];
+const MODEL_LADDERS = {
+  anthropic: [{ minPtn: 0, id: "claude-opus-5"  }, { minPtn: 12, id: "claude-fable-5-1" }],
+  openai:    [{ minPtn: 0, id: "gpt-5.6-terra"  }, { minPtn: 12, id: "gpt-6-astra"      }],
+  xai:       [{ minPtn: 0, id: "grok-4.3"       }, { minPtn: 12, id: "grok-4.6"         }],
+};
 ```
 
-**Every agent starts on Opus 5 from tick zero.** PTN does not buy a smarter
-model until 12 — below that it buys *context depth* and *reasoning budget* on
-the same model. Fable 5.1 at PTN 12 is a genuine step change and is priced
-like one.
+**PTN 12 is the unlock on all three.** Below it, PTN buys *context depth* and
+*reasoning budget* on the house's working model; at 12 the frontier rung opens
+and the bill jumps. The house is chosen in FORGE at build time and changed
+later with REWIRE (`village.rewire`, 60 coins, refused while a position is
+open — the verdict that opened it came from the old house).
+
+The provider changes exactly three things: **the model id on the wire, the
+price of every decision, and which parameters the request may legally carry**.
+It does not touch poll interval, context depth, size or slippage — same stats,
+same config, different bill. `tests/providers.test.ts` asserts that.
+
+`normalizeProvider` turns anything unrecognised into `anthropic`, so a corrupt
+save or a hand-edited build JSON compiles to a real ladder instead of an
+undefined one.
 
 ## Pricing
 
-| Model | Input $/MTok | Output $/MTok |
-|---|---|---|
-| `claude-opus-5` | 5 | 25 |
-| `claude-fable-5-1` | 10 | 50 |
+Real vendor list prices, standard tier, verified 2026-09-06.
+
+| House | Model | Input $/MTok | Output $/MTok |
+|---|---|---|---|
+| Anthropic | `claude-opus-5` | 5 | 25 |
+| Anthropic | `claude-fable-5-1` | 10 | 50 |
+| OpenAI | `gpt-5.6-terra` | 2 | 12 |
+| OpenAI | `gpt-6-astra` | 10 | 50 |
+| xAI | `grok-4.3` | 1.25 | 2.50 |
+| xAI | `grok-4.6` | 2 | 6 |
 
 ```
 inputTokens  = 320 + ctxCandles * 18 + 120      (system + candles + book)
@@ -56,8 +77,21 @@ Worked, and asserted in `tests/cost.test.ts`:
 * **PTN 12** — Fable 5.1, 96 candles, 3000 reasoning
   `(320 + 1728 + 120)/1e6 * 10 + 3300/1e6 * 50 = 0.02168 + 0.165 = $0.18668`
 
-PTN 12 costs **15.7x** PTN 0 per decision. That ratio is the whole economic
-tension of the LAB.
+PTN 12 costs **15.7x** PTN 0 per decision on Anthropic. That ratio is the whole
+economic tension of the LAB.
+
+The same two stats on the other two houses, same formula:
+
+| House | PTN 0 $/decision | PTN 12 $/decision | ratio |
+|---|---|---|---|
+| xAI | 0.00184 | 0.02414 | 13.1x |
+| OpenAI | 0.00534 | 0.18668 | 34.9x |
+| Anthropic | 0.01186 | 0.18668 | 15.7x |
+
+xAI is the cheap lane end to end — Grok 4.6 at the frontier still costs less
+than a *quarter* of an Opus 5 decision at PTN 0. OpenAI is the widest jump:
+Terra is cheap to run and Astra is not. Both frontier rungs bill $10/$50, so
+Astra and Fable 5.1 cost the same per decision to the cent.
 
 ## Boosts — temporary config overrides
 
@@ -76,7 +110,11 @@ genuinely changes what a request costs).
 * `maxTokens = 300 + thinkingBudget` — the 300-token verdict plus reasoning
   headroom, so a deep-thinking agent is not truncated mid-JSON.
 * `effort` — `0 → low`, `512 → medium`, `1500 → high`, `3000 → xhigh`. This is
-  how the reasoning budget is expressed on the wire; see `04-live.md`.
+  how the reasoning budget is expressed on the wire; each house carries it in
+  its own field (`output_config.effort`, `reasoning.effort`, `reasoning_effort`)
+  and the four rung names are legal on all three. See `04-live.md`.
+* `provider` — the house the config was compiled for. `village.brainOpts` hands
+  it to the live router, which picks the wire adapter from it.
 
 ## Boundary table (asserted in `tests/config.test.ts`)
 

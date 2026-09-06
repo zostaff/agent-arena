@@ -8,12 +8,13 @@ import type {
   Brain,
   BrainOpts,
   Market,
+  Provider,
   Snapshot,
   StrategyParams,
   Verdict,
 } from "./types.js";
 import type { BoostKind, CompiledConfig, StatKey, Stats } from "./config.js";
-import { compileConfig, STAT_LABEL } from "./config.js";
+import { compileConfig, normalizeProvider, PROVIDER_META, STAT_LABEL } from "./config.js";
 import { CLASS_LENS, CLASS_STRATEGY } from "./brain.js";
 import { fillPrice } from "./market.js";
 import type { AgentInit, AgentTickCtx, GridPos, NotifyKind } from "./agent.js";
@@ -28,6 +29,8 @@ export const BASE_TREASURY_CUT = 0.35;
 export const MINT_CUT_PER_LEVEL = 0.06;
 export const MAX_CUSTOM_AGENTS = 4;
 export const CUSTOM_DEPLOY_COST = 150;
+/** REWIRE: moving one agent to another house, mid-run, costs this many coins. */
+export const REWIRE_COST = 60;
 /** Grid units per tick before RELAY. */
 export const BASE_WALK_SPEED = 0.055;
 
@@ -143,6 +146,8 @@ export interface CustomAgentSpec {
   stats: Stats;
   strategy: StrategyParams;
   systemSuffix: string;
+  /** House the build is wired to. Defaults to Anthropic. */
+  provider?: Provider;
 }
 
 export interface VillageOptions {
@@ -269,10 +274,36 @@ export class Village {
       home: classHome(4 + this.customCount),
       strategy: spec.strategy,
       systemSuffix: spec.systemSuffix,
+      provider: spec.provider,
       custom: true,
     });
     this.pushNotification(agent, `DEPLOY ${spec.name}`, "info");
     return agent;
+  }
+
+  /**
+   * REWIRE — move a live agent to another house.
+   *
+   * The stats do not move: PTN 12 on Anthropic is PTN 12 on xAI, it just costs
+   * a different amount per decision and rides a different wire. An agent
+   * holding a position is not rewired mid-trade, because the verdict that
+   * opened it came from the old house.
+   */
+  rewire(agentId: string, provider: Provider): boolean {
+    const agent = this.agents.find((a) => a.id === agentId);
+    if (!agent) return false;
+    const next = normalizeProvider(provider);
+    if (agent.provider === next) return false;
+    if (agent.position) return false;
+    if (this.treasury < REWIRE_COST) return false;
+    this.treasury -= REWIRE_COST;
+    agent.provider = next;
+    this.pushNotification(
+      agent,
+      `REWIRE → ${PROVIDER_META[next].label}`,
+      "info",
+    );
+    return true;
   }
 
   /* ------------------------------------------------------------- buildings */
@@ -393,6 +424,7 @@ export class Village {
     return compileConfig(agent.stats, agent.level, this.activeBoostKinds, {
       basePositionEth: 0.05 * agent.strategy.sizeMult,
       nexusLevel: this.levelOf("NEXUS"),
+      provider: agent.provider,
     });
   }
 
@@ -463,6 +495,7 @@ export class Village {
     return {
       maxSizeEth: config.positionSizeEth,
       model: config.model,
+      provider: config.provider,
       thinkingBudget: config.thinkingBudget,
       agentClass: agent.cls,
       strategy: agent.strategy,

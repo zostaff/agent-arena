@@ -55,8 +55,16 @@ Buying an active boost extends it. Boosts are village-wide, not per agent.
 
 ## Agents
 
-Default roster is one of each class with a seeded stat spread. Custom FORGE
-builds cost **150 coins**, capped at **4**, and render with a dashed ring.
+Default roster is one of each class with a seeded stat spread, all wired to
+Anthropic. Custom FORGE builds cost **150 coins**, capped at **4**, and render
+with a dashed ring.
+
+**REWIRE** — `village.rewire(agentId, provider)` moves one agent to another
+house for **60 coins** (`REWIRE_COST`). Refused when: the agent is unknown, it
+is already on that house, it holds an open position (the verdict that opened it
+came from the old house), or the treasury is short. Stats do not move with it —
+PTN 12 on Anthropic is PTN 12 on xAI, it simply costs a different amount per
+decision. See `02-stat-compiler.md` for the ladders and the bill.
 
 Training: `BASE_TRAIN_TICKS = 260`, reduced 12% per building level above 1,
 floored at 40. One completed session is +1 stat and `18 * xpMult` XP.

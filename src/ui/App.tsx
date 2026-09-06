@@ -7,8 +7,14 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Village, type BuildingId, type VillageView } from "../core/village.js";
+import {
+  REWIRE_COST,
+  Village,
+  type BuildingId,
+  type VillageView,
+} from "../core/village.js";
 import type { BoostKind } from "../core/config.js";
+import type { Provider } from "../core/types.js";
 import { SimMarket } from "../sim/market.js";
 import { heuristicBrain } from "../sim/brain.js";
 import { mulberry32 } from "../sim/rng.js";
@@ -150,6 +156,7 @@ export function App(): React.ReactElement {
         stats: d.stats,
         strategy: d.strategy,
         systemSuffix: d.systemSuffix,
+        provider: d.provider,
       });
       if (!agent) {
         flash("deploy failed — need 150 coins and a free slot");
@@ -179,6 +186,7 @@ export function App(): React.ReactElement {
         stats: d.stats,
         strategy: d.strategy,
         systemSuffix: d.systemSuffix,
+        provider: d.provider,
       };
       setBoard(await publishBuild(entry));
       const next = { ...me, lastBuildId: id };
@@ -212,9 +220,24 @@ export function App(): React.ReactElement {
       stats: e.stats,
       strategy: e.strategy,
       systemSuffix: e.systemSuffix,
+      provider: e.provider ?? "anthropic",
     });
     setOverlay("FORGE");
   }, []);
+
+  /* REWIRE: the same house choice the FORGE offers, but on a live agent and
+     for coins. Refused mid-position — see Village.rewire. */
+  const onRewire = useCallback(
+    (agentId: string, provider: Provider) => {
+      if (village.rewire(agentId, provider)) {
+        setView(village.view());
+        flash(`rewired to ${provider}`);
+      } else {
+        flash(`rewire failed — needs ${REWIRE_COST} coins and no open position`);
+      }
+    },
+    [village, flash],
+  );
 
   const nextCost = selectedBuilding ? village.nextCost(selectedBuilding) : null;
   const rushCost = selectedBuilding ? village.rushCost(selectedBuilding) : 0;
@@ -254,7 +277,7 @@ export function App(): React.ReactElement {
         />
 
         <div className="dv-left">
-          <AgentInspector view={view} agentId={selectedAgent} />
+          <AgentInspector view={view} agentId={selectedAgent} onRewire={onRewire} />
           <BuildingPanel
             view={view}
             buildingId={selectedBuilding}

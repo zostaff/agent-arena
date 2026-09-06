@@ -1,12 +1,13 @@
 # 09 — Tests (`tests/`, vitest)
 
-`npm test` — 95 tests, ~1s.
+`npm test` — 124 tests, ~1s.
 
 | File | Covers |
 |---|---|
 | `config.test.ts` | stat compiler boundaries (0 / 7 / 12 / 15 per stat), model ladder, thinking budget rungs, effort mapping, clamping, all four boosts |
 | `cost.test.ts` | `costPerDecision` against the manual calculation at PTN 0 and PTN 12, monotonicity, ALPHA FEED repricing, `maxTokens` |
 | `brain.test.ts` | verdict clamping after parse, fence stripping, SELL→SKIP with no position, SKIP on parse failure / bad status / timeout / transport error / empty content / refusal / missing key, 429 retry, pinned headers and endpoint, `system` kept out of `messages`, no `temperature` on Opus 5 and Fable 5.1, no `budget_tokens` |
+| `providers.test.ts` | the three ladders and their prices, PTN 12 unlock on each, cost spread across houses, config identical except model and price, OpenAI body (no sampling params, `reasoning.effort`, `store:false`) and xAI body (`temperature: 0`, `reasoning_effort`, `max_completion_tokens`), text extraction and refusal detection per house, degrade-once on a rejected parameter, every failure path to SKIP, router dispatch and fallback, REWIRE cost and refusals |
 | `determinism.test.ts` | 10 000-tick sim on seed 42 identical across two runs, divergence on a different seed, identical candles, identical FORGE backtest |
 | `village.test.ts` | upgrade costs and times, construction, RUSH pricing, treasury refusals, boost prices and expiry, passive yield, MINT cut, custom deploy cap, full state-machine traversal, XP curve |
 | `market.test.ts` | mulberry32, candle aggregation, momentum / volatility / imbalance / spread, `fillPrice` book walking, sim market shape and long-run sanity, isometric projection and depth sort |
@@ -20,8 +21,16 @@
 * **Cost calculation.** Spelled out longhand in the test rather than imported,
   so the test fails if the formula changes shape rather than silently agreeing
   with itself.
-* **Never-throw.** Every failure mode of the live brain is enumerated. If a new
-  code path can throw out of `decide()`, add it here first.
+* **Never-throw.** Every failure mode of every live brain is enumerated, in
+  `brain.test.ts` for Anthropic and `providers.test.ts` for the other two. If a
+  new code path can throw out of `decide()`, add it here first.
+* **Every rung has a price.** `providers.test.ts` walks all three ladders and
+  asserts `MODEL_PRICING` covers each id. Without it, adding a model with no
+  price makes `costPerDecision` return 0 and the village lies about its spend.
+* **The house changes only three things.** Model id, cost, and legal wire
+  parameters — asserted field by field against an identical build on another
+  house. If a provider ever starts changing poll interval or context depth,
+  that test is where the decision gets made deliberately.
 
 ## Changing a number
 

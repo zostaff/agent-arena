@@ -8,7 +8,7 @@
  */
 
 import type { Stats } from "../core/config.js";
-import type { StrategyParams } from "../core/types.js";
+import type { StrategyParams, Provider } from "../core/types.js";
 
 export const BOARD_KEY = "dv_board_v1";
 export const ME_KEY = "dv_me";
@@ -81,6 +81,8 @@ export interface BuildEntry {
   stats: Stats;
   strategy: StrategyParams;
   systemSuffix: string;
+  /** Optional: entries published before houses existed have no provider. */
+  provider?: Provider;
 }
 
 export interface VillageEntry {

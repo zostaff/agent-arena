@@ -12,12 +12,16 @@ import { CLASS_COLOR, PALETTE, fmtEth, fmtUsd } from "./theme.js";
 import {
   FORGE_STAT_BUDGET,
   MAX_STAT,
+  MODEL_LADDERS,
+  PROVIDERS,
+  PROVIDER_META,
   STAT_KEYS,
   STAT_LABEL,
   compileConfig,
+  modelForPtn,
   type Stats,
 } from "../core/config.js";
-import type { StrategyParams } from "../core/types.js";
+import type { Provider, StrategyParams } from "../core/types.js";
 import { DEFAULT_STRATEGY } from "../core/brain.js";
 import {
   BACKTEST_SEED,
@@ -32,6 +36,8 @@ export interface ForgeDraft {
   stats: Stats;
   strategy: StrategyParams;
   systemSuffix: string;
+  /** Which house the build is wired to. Changes the model and the bill. */
+  provider: Provider;
 }
 
 export const EMPTY_DRAFT: ForgeDraft = {
@@ -39,6 +45,7 @@ export const EMPTY_DRAFT: ForgeDraft = {
   stats: { spd: 5, rsk: 5, ptn: 5, gas: 5 },
   strategy: { ...DEFAULT_STRATEGY },
   systemSuffix: "",
+  provider: "anthropic",
 };
 
 export function statsSpent(stats: Stats): number {
@@ -67,8 +74,9 @@ export function Forge(props: ForgeProps): React.ReactElement {
     () =>
       compileConfig(draft.stats, 0, [], {
         basePositionEth: 0.05 * draft.strategy.sizeMult,
+        provider: draft.provider,
       }),
-    [draft.stats, draft.strategy.sizeMult],
+    [draft.stats, draft.strategy.sizeMult, draft.provider],
   );
 
   function setStat(key: keyof Stats, value: number): void {
@@ -87,6 +95,9 @@ export function Forge(props: ForgeProps): React.ReactElement {
   async function runBacktest(): Promise<void> {
     setRunning(true);
     try {
+      /* The backtest is the seeded heuristic brain: it measures the BUILD, so
+         it is identical across houses on purpose. The house shows up in the
+         cost line above, not in the P&L below. */
       const cmp = await backtestAgainstBaseline({
         name: draft.name || "UNNAMED",
         stats: draft.stats,
@@ -102,6 +113,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
   async function exportJson(): Promise<void> {
     const payload = {
       name: draft.name,
+      provider: draft.provider,
       stats: draft.stats,
       strategy: draft.strategy,
       systemSuffix: draft.systemSuffix,
@@ -168,6 +180,16 @@ export function Forge(props: ForgeProps): React.ReactElement {
             </label>
           ))}
 
+          <div className="dv-compiled-title">HOUSE · the model this build runs on</div>
+          <HousePicker
+            value={draft.provider}
+            ptn={draft.stats.ptn}
+            onChange={(pv) => {
+              props.onDraft({ ...draft, provider: pv });
+              setResult(null);
+            }}
+          />
+
           <div className="dv-compiled-title">STRATEGY</div>
           <NumSlider
             label="entryThreshold"
@@ -227,7 +249,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
           <textarea
             className="dv-input dv-textarea"
             rows={4}
-            placeholder="Appended to the Claude system prompt in MODE=live. Ignored by the sim and by the backtest."
+            placeholder="Appended to the system prompt in MODE=live, whichever house. Ignored by the sim and by the backtest."
             value={draft.systemSuffix}
             onChange={(e) => props.onDraft({ ...draft, systemSuffix: e.target.value })}
           />
@@ -236,6 +258,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
         <section className="dv-forge-col">
           <div className="dv-compiled-title">COMPILED CONFIG · live preview</div>
           <div className="dv-compiled">
+            <PRow k="provider" v={PROVIDER_META[config.provider].label} />
             <PRow k="model" v={config.model} accent />
             <PRow k="pollIntervalMs" v={String(config.pollIntervalMs)} />
             <PRow k="ctxCandles" v={String(config.ctxCandles)} />
@@ -306,6 +329,59 @@ export function Forge(props: ForgeProps): React.ReactElement {
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The house picker. Every button states what it actually buys: the model id at
+ * the agent's current PTN, and the frontier rung PTN 12 unlocks.
+ */
+export function HousePicker({
+  value,
+  ptn,
+  onChange,
+}: {
+  value: Provider;
+  ptn: number;
+  onChange(p: Provider): void;
+}): React.ReactElement {
+  const meta = PROVIDER_META[value];
+  return (
+    <div className="dv-house">
+      <div className="dv-house-row">
+        {PROVIDERS.map((p) => {
+          const m = PROVIDER_META[p];
+          const on = p === value;
+          return (
+            <button
+              key={p}
+              className={`dv-btn dv-house-btn${on ? " dv-house-on" : ""}`}
+              style={on ? { borderColor: m.color, color: m.color } : undefined}
+              onClick={() => onChange(p)}
+            >
+              {m.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="dv-house-models">
+        {MODEL_LADDERS[value].map((rung) => (
+          <div className="dv-row" key={rung.id}>
+            <span className="dv-row-k">
+              PTN {rung.minPtn}
+              {ptn >= rung.minPtn ? " · active" : " · locked"}
+            </span>
+            <span
+              className="dv-row-v"
+              style={{ color: modelForPtn(ptn, value) === rung.id ? meta.color : undefined }}
+            >
+              {rung.id}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="dv-house-note">{meta.note}</div>
     </div>
   );
 }

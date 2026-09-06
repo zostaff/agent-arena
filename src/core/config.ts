@@ -4,9 +4,15 @@
  * The village IS the config editor. Every stat bar the player fills is a real
  * field the engine reads on the next tick. Nothing here is cosmetic.
  *
- * Every agent starts on Opus 5 from tick zero. PTN buys CONTEXT DEPTH and
- * REASONING BUDGET, not a better model. Fable 5.1 unlocks at PTN 12.
+ * PTN buys CONTEXT DEPTH and REASONING BUDGET, not a better model. The top
+ * rung of whichever provider the agent is wired to unlocks at PTN 12.
+ *
+ * THREE HOUSES. An agent is wired to one provider and trains inside its
+ * ladder. The provider is not a skin: it changes the model id on the wire, the
+ * price of every decision, and which parameters the request may legally carry.
  */
+
+import type { Provider } from "./types.js";
 
 /** Stat ceiling. Training and level-ups clamp here. */
 export const MAX_STAT = 15;
@@ -37,12 +43,97 @@ export interface ModelRung {
 }
 
 /**
- * PTN does not buy intelligence until 12. Below that it buys depth on Opus 5.
+ * PTN does not buy intelligence until 12. Below that it buys depth on the
+ * house's working model. At 12 the frontier rung unlocks — and the bill jumps.
+ *
+ * Model ids and prices are the real ones as of 2026-09-06. See specs/04-live.md
+ * for the sources; if a house re-prices, this table is the only thing to edit.
  */
-export const MODEL_LADDER: readonly ModelRung[] = Object.freeze([
-  { minPtn: 0, id: "claude-opus-5" },
-  { minPtn: 12, id: "claude-fable-5-1" },
+export const MODEL_LADDERS: Readonly<Record<Provider, readonly ModelRung[]>> =
+  Object.freeze({
+    anthropic: Object.freeze([
+      { minPtn: 0, id: "claude-opus-5" },
+      { minPtn: 12, id: "claude-fable-5-1" },
+    ]),
+    openai: Object.freeze([
+      { minPtn: 0, id: "gpt-5.6-terra" },
+      { minPtn: 12, id: "gpt-6-astra" },
+    ]),
+    xai: Object.freeze([
+      { minPtn: 0, id: "grok-4.3" },
+      { minPtn: 12, id: "grok-4.6" },
+    ]),
+  });
+
+/** The Anthropic ladder, kept as a named export because it is the default. */
+export const MODEL_LADDER: readonly ModelRung[] = MODEL_LADDERS.anthropic;
+
+export const PROVIDERS: readonly Provider[] = Object.freeze([
+  "anthropic",
+  "openai",
+  "xai",
 ]);
+
+export const DEFAULT_PROVIDER: Provider = "anthropic";
+
+export interface ProviderMeta {
+  id: Provider;
+  /** Shown in the village. */
+  label: string;
+  /** Endpoint the live brain posts to. */
+  endpoint: string;
+  /** The wire field the effort rung rides on for this house. */
+  effortField: string;
+  /** Whether this house still accepts `temperature` on its ladder. */
+  sampling: boolean;
+  /** Environment variable holding the key. */
+  envKey: string;
+  color: string;
+  /** One line the FORGE shows under the picker. Facts, not marketing. */
+  note: string;
+}
+
+export const PROVIDER_META: Readonly<Record<Provider, ProviderMeta>> =
+  Object.freeze({
+    anthropic: {
+      id: "anthropic",
+      label: "ANTHROPIC",
+      endpoint: "https://api.anthropic.com/v1/messages",
+      effortField: "output_config.effort",
+      sampling: false,
+      envKey: "ANTHROPIC_API_KEY",
+      color: "#CCFF00",
+      note: "Opus 5 → Fable 5.1 at PTN 12. No sampling params on this family.",
+    },
+    openai: {
+      id: "openai",
+      label: "OPENAI",
+      endpoint: "https://api.openai.com/v1/responses",
+      effortField: "reasoning.effort",
+      sampling: false,
+      envKey: "OPENAI_API_KEY",
+      color: "#5be2b0",
+      note: "GPT-5.6 Terra → GPT-6 Astra at PTN 12. Responses API, no temperature.",
+    },
+    xai: {
+      id: "xai",
+      label: "XAI",
+      endpoint: "https://api.x.ai/v1/chat/completions",
+      effortField: "reasoning_effort",
+      sampling: true,
+      envKey: "XAI_API_KEY",
+      color: "#8ab4ff",
+      note: "Grok 4.3 → Grok 4.6 at PTN 12. The only house that still takes temperature: 0.",
+    },
+  });
+
+export function isProvider(v: unknown): v is Provider {
+  return typeof v === "string" && (PROVIDERS as readonly string[]).includes(v);
+}
+
+export function normalizeProvider(v: unknown): Provider {
+  return isProvider(v) ? v : DEFAULT_PROVIDER;
+}
 
 export interface ModelPricing {
   /** USD per million input tokens. */
@@ -55,6 +146,10 @@ export const MODEL_PRICING: Readonly<Record<string, ModelPricing>> =
   Object.freeze({
     "claude-opus-5": { inputPerMTok: 5, outputPerMTok: 25 },
     "claude-fable-5-1": { inputPerMTok: 10, outputPerMTok: 50 },
+    "gpt-5.6-terra": { inputPerMTok: 2, outputPerMTok: 12 },
+    "gpt-6-astra": { inputPerMTok: 10, outputPerMTok: 50 },
+    "grok-4.3": { inputPerMTok: 1.25, outputPerMTok: 2.5 },
+    "grok-4.6": { inputPerMTok: 2, outputPerMTok: 6 },
   });
 
 /** Base position size in ETH before RSK and level scaling. */
@@ -82,6 +177,8 @@ export const TOKENS_BOOK = 120;
 export const MAX_OUTPUT_TOKENS = 300;
 
 export interface CompiledConfig {
+  /** Which house this agent is wired to. */
+  provider: Provider;
   model: string;
   pollIntervalMs: number;
   ctxCandles: number;
@@ -104,6 +201,8 @@ export interface CompileOptions {
   basePositionEth?: number;
   /** NEXUS levels: +12% position size each. */
   nexusLevel?: number;
+  /** Which house the agent is wired to. Defaults to Anthropic. */
+  provider?: Provider;
 }
 
 function clampStat(v: number): number {
@@ -120,13 +219,25 @@ export function normalizeStats(stats: Partial<Stats>): Stats {
   };
 }
 
-/** Highest rung whose minPtn the agent has reached. */
-export function modelForPtn(ptn: number): string {
-  let id = MODEL_LADDER[0].id;
-  for (const rung of MODEL_LADDER) {
+/** Highest rung of this house's ladder whose minPtn the agent has reached. */
+export function modelForPtn(
+  ptn: number,
+  provider: Provider = DEFAULT_PROVIDER,
+): string {
+  const ladder = MODEL_LADDERS[normalizeProvider(provider)];
+  let id = ladder[0].id;
+  for (const rung of ladder) {
     if (ptn >= rung.minPtn) id = rung.id;
   }
   return id;
+}
+
+/** The house an arbitrary model id belongs to, or the default if unknown. */
+export function providerForModel(model: string): Provider {
+  for (const p of PROVIDERS) {
+    if (MODEL_LADDERS[p].some((r) => r.id === model)) return p;
+  }
+  return DEFAULT_PROVIDER;
 }
 
 /** PTN 0-3 → 0, 4-7 → 512, 8-11 → 1500, 12+ → 3000. */
@@ -212,7 +323,8 @@ export function compileConfig(
   const base = options.basePositionEth ?? BASE_POSITION_ETH;
   const nexus = Math.max(0, options.nexusLevel ?? 0);
 
-  const model = modelForPtn(stats.ptn);
+  const provider = normalizeProvider(options.provider);
+  const model = modelForPtn(stats.ptn, provider);
 
   let pollIntervalMs = pollIntervalForSpd(stats.spd);
   let ctxCandles = ctxCandlesForPtn(stats.ptn);
@@ -237,6 +349,7 @@ export function compileConfig(
   }
 
   return {
+    provider,
     model,
     pollIntervalMs,
     ctxCandles,

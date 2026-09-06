@@ -9,8 +9,8 @@ engine reads on the next tick.
 
 ## The one idea
 
-`src/core/config.ts` compiles four stats into a runtime config. Everything else
-consumes that config. Training raises a stat → the compiler emits a different
+`src/core/config.ts` compiles four stats — and the **house** the agent is wired
+to — into a runtime config. Everything else consumes that config. Training raises a stat → the compiler emits a different
 config → the agent polls faster / reads deeper / sizes bigger / slips less. No
 stat is cosmetic and no cosmetic is a stat.
 
@@ -26,7 +26,7 @@ stat is cosmetic and no cosmetic is a stat.
               ┌────────────────┴────────────────┐
               ▼                                 ▼
    src/sim  SimMarket + heuristicBrain   src/live  PonsMarket + claudeBrain
-   seeded, deterministic, free           Bitquery + Anthropic + viem
+   seeded, deterministic, free      Anthropic · OpenAI · xAI, routed per agent
               │                                 │
               └──────────► src/run.ts ◄─────────┘
                          MODE=sim | MODE=live
@@ -51,6 +51,8 @@ in the browser, and what makes a backtest and a live session comparable.
 | `src/sim/market.ts` | seeded momentum random walk, OHLC, synthetic book |
 | `src/sim/brain.ts` | deterministic heuristic brain reading `StrategyParams` |
 | `src/sim/backtest.ts` | seed 42 / 7000 ticks, baseline comparison |
+| `src/live/providers.ts` | OpenAI Responses + xAI chat wires on one defensive loop |
+| `src/live/router.ts` | `liveBrain()` — picks the house per decision from `opts.provider` |
 | `src/live/pons.ts` | Bitquery GraphQL, `PonsLaunches` + `PonsOHLC`, 8s cache |
 | `src/live/brain.ts` | Anthropic Messages API, never throws out of `decide()` |
 | `src/live/execute.ts` | viem, chain 4663, Pons router, `dryRun: true` by default |
@@ -72,5 +74,6 @@ npm install
 npm test          # 95 tests
 npm run sim       # MODE=sim, 60fps, seeded
 npm run dev       # the village in a browser
-MODE=live npm run live   # needs ANTHROPIC_API_KEY + BITQUERY_TOKEN
+MODE=live npm run live   # needs BITQUERY_TOKEN + the key of each house in use
+AGENT_PROVIDERS=xai,openai MODE=live npm run live   # wire the roster in order
 ```

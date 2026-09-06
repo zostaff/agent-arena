@@ -7,6 +7,21 @@ The custom agent builder. Everything in it is a real engine input.
 20 points across SPD / RSK / PTN / GAS, each capped at `MAX_STAT = 15`. The
 sliders refuse a move that would overspend rather than silently rebalancing.
 
+## House
+
+Three buttons above the strategy block: **ANTHROPIC · OPENAI · XAI**. The
+picker states what it actually buys — the model id at the build's current PTN,
+the frontier rung PTN 12 unlocks, and one line of fact about the house (which
+sampling parameters it accepts). The compiled-config preview underneath
+reprices instantly, which is the whole point: the same 20 stat points cost
+`$0.00184` a decision on Grok 4.3 and `$0.18668` on GPT-6 Astra.
+
+The backtest is deliberately **identical across houses** — it runs the seeded
+heuristic brain, so it measures the build, not the vendor. The house shows up
+in the cost line, never in the P&L. The provider travels with the build
+through DEPLOY, EXPORT JSON and PUBLISH TO BOARD; an entry published before
+houses existed loads as Anthropic.
+
 ## Strategy parameters
 
 Read directly by `heuristicBrain` in sim, and folded into the system prompt in
@@ -23,15 +38,15 @@ live.
 
 ## System prompt suffix
 
-Free text, **live mode only**. Appended to the Claude system prompt under an
-`Operator brief:` heading. The sim brain and the backtest ignore it entirely —
+Free text, **live mode only**. Appended to the system prompt of whichever house
+the build is wired to, under an `Operator brief:` heading. The sim brain and the backtest ignore it entirely —
 which is stated on the field, because a build that scores well on a prompt the
 backtest never read would be a lie.
 
 ## Compiled config preview
 
 Recomputed on every slider move through the same `compileConfig` the engine
-calls. Shows model, poll interval, context depth, thinking budget with its
+calls. Shows provider, model, poll interval, context depth, thinking budget with its
 effort rung, position size, slippage, fees, cost per decision, and max tokens.
 
 ## Backtest

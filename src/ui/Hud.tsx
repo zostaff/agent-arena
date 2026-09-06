@@ -7,15 +7,25 @@
 
 import React from "react";
 import { CLASS_COLOR, PALETTE, fmtEth, fmtUsd } from "./theme.js";
-import { STAT_KEYS, STAT_LABEL, MAX_STAT, type BoostKind } from "../core/config.js";
+import {
+  STAT_KEYS,
+  STAT_LABEL,
+  MAX_STAT,
+  PROVIDERS,
+  PROVIDER_META,
+  modelForPtn,
+  type BoostKind,
+} from "../core/config.js";
 import {
   BOOST_DEFS,
   MAX_BUILDING_LEVEL,
   MAX_CUSTOM_AGENTS,
   CUSTOM_DEPLOY_COST,
+  REWIRE_COST,
   type BuildingId,
   type VillageView,
 } from "../core/village.js";
+import type { Provider } from "../core/types.js";
 import type { VillageEntry } from "./storage.js";
 
 export interface StatCardsProps {
@@ -177,14 +187,19 @@ export function StatBar({
 export function AgentInspector({
   view,
   agentId,
+  onRewire,
 }: {
   view: VillageView;
   agentId: string | null;
+  onRewire?(agentId: string, provider: Provider): void;
 }): React.ReactElement | null {
   const agent = view.agents.find((a) => a.id === agentId);
   if (!agent) return null;
   const cfg = agent.config;
   const color = CLASS_COLOR[agent.cls];
+  const house = PROVIDER_META[cfg.provider];
+  /* An agent holding a position keeps the house that opened it. */
+  const canRewire = agent.position === null && view.treasury >= REWIRE_COST;
 
   return (
     <div className="dv-panel dv-inspector">
@@ -204,6 +219,7 @@ export function AgentInspector({
 
       <div className="dv-compiled">
         <div className="dv-compiled-title">COMPILED CONFIG</div>
+        <Row k="provider" v={house.label} />
         <Row k="model" v={cfg.model} accent />
         <Row k="pollIntervalMs" v={String(cfg.pollIntervalMs)} />
         <Row k="ctxCandles" v={String(cfg.ctxCandles)} />
@@ -213,6 +229,35 @@ export function AgentInspector({
         <Row k="feeBps" v={String(cfg.feeBps)} />
         <Row k="costPerDecision" v={fmtUsd(cfg.costPerDecision)} />
       </div>
+
+      {onRewire && (
+        <div className="dv-compiled">
+          <div className="dv-compiled-title">REWIRE · {REWIRE_COST} coins</div>
+          <div className="dv-house-row">
+            {PROVIDERS.map((p) => {
+              const m = PROVIDER_META[p];
+              const on = p === cfg.provider;
+              return (
+                <button
+                  key={p}
+                  className={`dv-btn dv-house-btn${on ? " dv-house-on" : ""}`}
+                  style={on ? { borderColor: m.color, color: m.color } : undefined}
+                  disabled={on || !canRewire}
+                  title={m.note}
+                  onClick={() => onRewire(agent.id, p)}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="dv-house-note">
+            {agent.position
+              ? "holding a position — rewire after it settles"
+              : `${modelForPtn(agent.stats.ptn, cfg.provider)} at PTN ${agent.stats.ptn}`}
+          </div>
+        </div>
+      )}
 
       <div className="dv-compiled">
         <div className="dv-compiled-title">RECORD</div>

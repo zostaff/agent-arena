@@ -3,6 +3,20 @@
 Real market data, real model, real chain. Read this whole file before touching
 `brain.ts` — two things in it look wrong until you know why.
 
+Three houses answer the same `Brain` interface:
+
+| File | House | Endpoint |
+|---|---|---|
+| `brain.ts` | Anthropic | `POST https://api.anthropic.com/v1/messages` |
+| `providers.ts` | OpenAI | `POST https://api.openai.com/v1/responses` |
+| `providers.ts` | xAI | `POST https://api.x.ai/v1/chat/completions` |
+| `router.ts` | — | picks one per decision from `opts.provider` |
+
+One village runs agents on all three at once, so the injected Brain cannot be a
+single vendor client. `liveBrain()` in `router.ts` *is* a Brain: it reads
+`opts.provider`, which the village copies out of the compiled config, and
+forwards. A missing or unknown provider falls back to Anthropic.
+
 ## `brain.ts` — Anthropic Messages API
 
 Raw `fetch`, no SDK: `src/core` is dependency-free and isomorphic, and this
@@ -62,6 +76,70 @@ handled as SKIP.
 `tests/brain.test.ts` covers every path: JSON parse failure, bad HTTP status,
 timeout / abort, transport error, empty content, refusal, missing API key,
 429-then-success. All of them produce `{ action: "SKIP", sizeEth: 0 }`.
+
+## `providers.ts` — OpenAI and xAI
+
+One request loop, two adapters. The loop makes the same promises as
+`brain.ts`; a `WireAdapter` supplies only what differs: URL, headers, body,
+text extraction, refusal detection, usage fields, and a degrade rule.
+
+### OpenAI — the Responses API
+
+```
+POST https://api.openai.com/v1/responses
+authorization: Bearer $OPENAI_API_KEY
+
+{ model, instructions, input: [{role:"user", content}],
+  max_output_tokens: 300 + thinkingBudget,
+  reasoning: { effort }, store: false }
+```
+
+* `instructions` carries the system prompt; there is no `system` message.
+* **No sampling parameters.** `gpt-6-astra` and the GPT-5.6 family rejected
+  `temperature` / `top_p` / `logprobs` on migration — the same deviation
+  Anthropic forced, for the same reason, on a different vendor.
+* Text lives in `output[]`: keep `type === "message"`, then the
+  `output_text` parts. Reasoning blocks are skipped, not parsed.
+* A `refusal` content part, or `status === "incomplete"` (typically
+  `max_output_tokens`), is a 200 with no verdict → SKIP.
+* `store: false` — a trading position does not need to persist on a vendor's
+  server.
+
+### xAI — OpenAI-compatible chat completions
+
+```
+POST https://api.x.ai/v1/chat/completions
+authorization: Bearer $XAI_API_KEY
+
+{ model, messages: [system, user],
+  max_completion_tokens: 300 + thinkingBudget,
+  reasoning_effort: effort, temperature: 0 }
+```
+
+* `max_tokens` is deprecated here; `max_completion_tokens` is the live field.
+* **This is the one house where the brief's `temperature: 0` is still legal**,
+  so it is still sent. The determinism the brief wanted survives on exactly one
+  of the three wires.
+* Text is `choices[0].message.content`; `message.refusal` or
+  `finish_reason === "content_filter"` is a SKIP.
+
+### Degrade-once
+
+xAI documents `reasoning_effort` support as varying per model, and any
+deployment can reject a parameter its docs allow. So a **400 is read, not just
+counted**: `adapter.degrade(body, errorText)` returns the same request with the
+named parameter stripped (`reasoning` / `reasoning_effort`, then `temperature`
+/ `store`), and it is sent again immediately. A degrade does not consume the
+retry budget — it is a smaller request, not a failed attempt — and at most two
+happen per decision. A 400 nobody can fix (bad model id) still SKIPs.
+
+A silently dead house is worse than a slightly slower one.
+
+### The effort rung is the same number everywhere
+
+PTN buys a thinking budget. `config.ts` maps it to `low` / `medium` / `high` /
+`xhigh` — four names all three houses accept — and each adapter carries it in
+its own field. The village prices and displays the *budget*, never the field.
 
 ## `pons.ts` — Bitquery streaming GraphQL
 

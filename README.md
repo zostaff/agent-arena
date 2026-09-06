@@ -3,6 +3,11 @@
 An isometric village where AI agents train in buildings, walk to a terminal,
 and trade memecoins on the Pons bonding-curve DEX (Robinhood Chain).
 
+**New: three houses.** Every agent is wired to Anthropic, OpenAI or xAI — a
+choice you make in the FORGE and change later with REWIRE. It is not a skin: it
+changes the model id on the wire, the price of every decision, and which
+parameters the request may legally carry.
+
 **Every stat bar is a real config field the engine reads.** Fill the SPD bar and
 the agent's poll interval genuinely drops. Fill PTN and it genuinely reads more
 candles, thinks with a bigger budget, and at 12 switches models. The village is
@@ -10,7 +15,7 @@ a config editor with a progress bar in front of it.
 
 ```
 npm install
-npm test        # 95 tests
+npm test        # 124 tests
 npm run sim     # MODE=sim — seeded, deterministic, free
 npm run dev     # the village in a browser
 ```
@@ -26,8 +31,10 @@ npm run dev     # the village in a browser
         Market + Brain injected│
               ┌────────────────┴────────────────┐
               ▼                                 ▼
-   src/sim   SimMarket + heuristicBrain  src/live  PonsMarket + claudeBrain
-   seeded · deterministic · free         Bitquery · Anthropic · viem
+   src/sim   SimMarket + heuristicBrain  src/live  PonsMarket + liveBrain
+   seeded · deterministic · free         Bitquery · viem · 3 houses
+                                         claude · openai · xai, routed
+                                         per agent by src/live/router.ts
               │                                 │
               └──────────► src/run.ts ◄─────────┘
                          MODE=sim | MODE=live
@@ -49,14 +56,42 @@ positionSizeEth = base * (1 + rsk * 0.18) * (1 + level * 0.12)   clamp base * 8
 slippageBps     = max(30, 160 - gas * 9)
 ```
 
-Every agent starts on **Opus 5** from tick zero. PTN buys context depth and
-reasoning budget, **not** a better model — until PTN 12, which unlocks
-**Fable 5.1** at 15.7x the cost per decision. That trade-off is the LAB.
+PTN buys context depth and reasoning budget, **not** a better model — until
+PTN 12, which unlocks the frontier rung of whichever house the agent is wired
+to. That trade-off is the LAB.
 
-| | model | ctx | reasoning | $/decision |
+## Three houses
+
+Pick the brain your agents think with. Real vendor list prices, standard tier,
+checked 2026-09-06.
+
+| House | PTN 0 → PTN 12 | $/decision at PTN 0 | $/decision at PTN 12 | jump |
 |---|---|---|---|---|
-| PTN 0 | `claude-opus-5` | 24 | 0 | $0.01186 |
-| PTN 12 | `claude-fable-5-1` | 96 | 3000 | $0.18668 |
+| **xAI** | `grok-4.3` → `grok-4.6` | $0.00184 | $0.02414 | 13.1x |
+| **Anthropic** | `claude-opus-5` → `claude-fable-5-1` | $0.01186 | $0.18668 | 15.7x |
+| **OpenAI** | `gpt-5.6-terra` → `gpt-6-astra` | $0.00534 | $0.18668 | 34.9x |
+
+A whole Grok 4.6 decision — frontier rung, 96 candles, 3000 reasoning tokens —
+costs less than a quarter of what an Opus 5 decision costs at PTN 0. GPT-6
+Astra and Fable 5.1 both bill $10/$50, so at the top they cost the same to the
+cent; the difference is what you paid to get there.
+
+**The house changes exactly three things**: the model id on the wire, the price
+of every decision, and which parameters the request may legally carry. Poll
+interval, context depth, position size and slippage are identical across
+houses — same stats, same config, different bill. A test asserts that field by
+field, so it can never quietly become a balance lever.
+
+* **FORGE** — three buttons above the strategy sliders. The compiled-config
+  preview reprices as you click; the backtest deliberately does not move,
+  because it runs the seeded heuristic brain and measures the *build*.
+* **REWIRE** — 60 coins, in the agent inspector, mid-run. Refused while the
+  agent holds a position: the verdict that opened it came from the old house.
+* **`AGENT_PROVIDERS=xai,openai`** — wires the roster in order at boot in live
+  mode, without touching code.
+
+Adding a fourth house is one entry in `MODEL_LADDERS`, one in `MODEL_PRICING`,
+one `WireAdapter`, and one line in the router.
 
 ## Specs
 
@@ -66,19 +101,19 @@ Written so a future session can pick up any part without re-reading the code.
 |---|---|
 | [00 — Overview](specs/00-overview.md) | architecture, file map, reading order |
 | [01 — Core contracts](specs/01-core-contracts.md) | `Market`, `Brain`, `Snapshot`, `Verdict`, agent states, class lenses |
-| [02 — Stat compiler](specs/02-stat-compiler.md) | every formula, the model ladder, pricing, boosts, boundary table |
+| [02 — Stat compiler](specs/02-stat-compiler.md) | every formula, the three ladders, pricing, boosts, boundary table |
 | [03 — Sim](specs/03-sim.md) | mulberry32, the random walk and its tuning, heuristic brain, backtest |
-| [04 — Live](specs/04-live.md) | Anthropic wire contract **and its two forced deviations**, Bitquery queries, viem execution |
+| [04 — Live](specs/04-live.md) | all three wire contracts **and their forced deviations**, degrade-once, Bitquery queries, viem execution |
 | [05 — Village economy](specs/05-village-economy.md) | buildings, costs, times, RUSH, boosts, treasury, fills |
 | [06 — FORGE](specs/06-forge.md) | stat budget, strategy params, prompt suffix, backtest, deploy |
 | [07 — UI](specs/07-ui.md) | projection, SVG anatomy, HUD, DEX overlay, palette |
 | [08 — Multiplayer](specs/08-multiplayer.md) | `window.storage`, the two rankings, load-a-rival's-build |
 | [09 — Tests](specs/09-tests.md) | what each file covers and which assertions are load-bearing |
 
-## Two deviations from the original brief
+## Deviations from the original brief
 
-Both forced by the current Anthropic API — sending the brief's version returns
-a `400`. Full reasoning in [specs/04-live.md](specs/04-live.md).
+Forced by the vendors' current APIs — sending the brief's version returns a
+`400`. Full reasoning in [specs/04-live.md](specs/04-live.md).
 
 1. **`temperature: 0` is not sent** to `claude-opus-5` or `claude-fable-5-1`.
    Sampling parameters were removed on that model family. It is still sent for
@@ -89,6 +124,14 @@ a `400`. Full reasoning in [specs/04-live.md](specs/04-live.md).
    (`0 → low`, `512 → medium`, `1500 → high`, `3000 → xhigh`) and still rides
    on `max_tokens` as headroom. The number the village displays and prices is
    unchanged.
+
+3. **OpenAI rejects sampling parameters too.** `temperature`, `top_p` and
+   `logprobs` were removed on `gpt-6-astra` and the GPT-5.6 family. The
+   Responses API carries the reasoning budget as `reasoning.effort`.
+
+**xAI is the one house where `temperature: 0` still works**, and it is still
+sent there — the determinism the brief asked for survives on exactly one of the
+three wires.
 
 Everything else in the brief is implemented as written.
 
@@ -102,6 +145,10 @@ Everything else in the brief is implemented as written.
   have sent. `DRY_RUN=0` is the only way off.
 * A fill whose realised slippage exceeds the agent's `slippageBps` is refused,
   not eaten.
+* **Degrade-once.** A `400` body is *read*, not just counted: if it names a
+  parameter (`reasoning_effort`, `temperature`, `store`), the request is sent
+  again immediately without it, outside the retry budget. A silently dead house
+  is worse than a slightly slower one.
 
 ## Environment
 
@@ -112,6 +159,9 @@ cp .env.example .env
 | Variable | Used by |
 |---|---|
 | `ANTHROPIC_API_KEY` | `src/live/brain.ts` |
+| `OPENAI_API_KEY` | `src/live/providers.ts` — only if an agent is wired to OpenAI |
+| `XAI_API_KEY` | `src/live/providers.ts` — only if an agent is wired to xAI |
+| `AGENT_PROVIDERS` | `src/run.ts` — e.g. `xai,openai`; wires the roster in order |
 | `BITQUERY_TOKEN` | `src/live/pons.ts` |
 | `RH_RPC_URL`, `RH_PRIVATE_KEY`, `PONS_ROUTER` | `src/live/execute.ts` |
 | `DRY_RUN` | `src/live/execute.ts` — anything but `0` keeps it dry |

@@ -5,6 +5,13 @@
 
 export type Action = "BUY" | "SELL" | "SKIP";
 
+/**
+ * The three houses an agent can be wired to. This is a contract type, not a
+ * cosmetic label: it selects the ladder in config.ts and the wire adapter in
+ * src/live. See specs/04-live.md.
+ */
+export type Provider = "anthropic" | "openai" | "xai";
+
 export type AgentClass = "SCOUT" | "SNIPER" | "WHALE" | "ARB" | "CUSTOM";
 
 export type AgentState =
@@ -76,11 +83,13 @@ export interface BrainOpts {
   maxSizeEth: number;
   /** Model id from the ladder in config.ts. */
   model: string;
+  /** House the model belongs to. Selects the wire adapter in live mode. */
+  provider?: Provider;
   /** Reasoning budget in tokens; mapped to output_config.effort in live mode. */
   thinkingBudget: number;
   agentClass: AgentClass;
   strategy: StrategyParams;
-  /** Live mode only: appended to the Claude system prompt (FORGE field). */
+  /** Live mode only: appended to the system prompt (FORGE field). */
   systemSuffix?: string;
   /** Live mode only: class lens sentence. */
   lens?: string;

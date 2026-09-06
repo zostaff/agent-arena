@@ -2,19 +2,23 @@
  * DEGEN VILLAGE — node entry point.
  *
  *   MODE=sim  npm run sim    SimMarket  + heuristicBrain, 60fps
- *   MODE=live npm run live   PonsMarket + claudeBrain,    pollIntervalMs
+ *   MODE=live npm run live   PonsMarket + liveBrain,     pollIntervalMs
+ *
+ * liveBrain routes each agent to the house it is wired to: Anthropic, OpenAI
+ * or xAI. AGENT_PROVIDERS=xai,openai wires the roster in order at boot.
  *
  * Same Village, same agents, same stat compiler. Only the two injected
  * interfaces change, which is the entire point of the core/ boundary.
  */
 
 import { Village, type VillageOptions } from "./core/village.js";
-import { compileConfig } from "./core/config.js";
+import { compileConfig, isProvider } from "./core/config.js";
 import { SimMarket } from "./sim/market.js";
 import { heuristicBrain } from "./sim/brain.js";
 import { mulberry32 } from "./sim/rng.js";
 import { PonsMarket } from "./live/pons.js";
-import { claudeBrain } from "./live/brain.js";
+import type { BrainTrace } from "./live/brain.js";
+import { liveBrain } from "./live/router.js";
 
 const FRAME_MS = 1000 / 60;
 
@@ -43,7 +47,7 @@ function report(village: Village, mode: string): void {
       return (
         `  ${a.name.padEnd(12)} ${a.state.padEnd(7)} L${a.level} ` +
         `spd${a.stats.spd} rsk${a.stats.rsk} ptn${a.stats.ptn} gas${a.stats.gas} ` +
-        `| ${cfg.model} ctx${cfg.ctxCandles} think${cfg.thinkingBudget} ` +
+        `| ${cfg.provider}:${cfg.model} ctx${cfg.ctxCandles} think${cfg.thinkingBudget} ` +
         `poll${cfg.pollIntervalMs}ms size${cfg.positionSizeEth.toFixed(3)} ` +
         `slip${cfg.slippageBps} $${cfg.costPerDecision.toFixed(5)}/dec ` +
         `| pnl ${a.realizedPnlEth >= 0 ? "+" : ""}${a.realizedPnlEth.toFixed(3)} ` +
@@ -82,20 +86,36 @@ async function runSim(): Promise<void> {
 
 async function runLive(): Promise<void> {
   const market = new PonsMarket();
-  const brain = claudeBrain({
-    onTrace: (t) => {
+  const trace = {
+    onTrace: (t: BrainTrace) => {
       const tag = t.ok ? "ok" : `ERR ${t.error ?? t.status}`;
       console.log(
-        `  <claude> ${t.pair} ${t.model} effort=${t.effort} ${t.ms}ms ` +
+        `  <${t.model}> ${t.pair} effort=${t.effort} ${t.ms}ms ` +
           `in=${t.inputTokens} out=${t.outputTokens} ${tag}`,
       );
     },
-  });
+  };
+  const brain = liveBrain({ shared: trace, anthropic: trace });
 
   const options: VillageOptions = { market, brain, blockingDecisions: false };
   const village = new Village(options);
 
-  console.log("DEGEN VILLAGE — live: Pons on Robinhood Chain, Claude in the loop.");
+  /* AGENT_PROVIDERS wires the roster without touching the code: the nth agent
+     takes the nth house, and anything past the end of the list stays default. */
+  const wiring = env("AGENT_PROVIDERS", "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.length > 0);
+  wiring.forEach((name, i) => {
+    const agent = village.agents[i];
+    if (agent && isProvider(name)) agent.provider = name;
+  });
+
+  console.log("DEGEN VILLAGE — live: Pons on Robinhood Chain, three houses in the loop.");
+  for (const agent of village.agents) {
+    const cfg = village.configFor(agent);
+    console.log(`  ${agent.name.padEnd(12)} ${cfg.provider.padEnd(10)} ${cfg.model}`);
+  }
   console.log("Execution stays in dry run until DRY_RUN=0 is set explicitly.");
 
   let frame = 0;
@@ -107,7 +127,9 @@ async function runLive(): Promise<void> {
     /* The fastest agent sets the cadence; SPD is a real clock, not a bar. */
     let poll = Infinity;
     for (const agent of village.agents) {
-      const cfg = compileConfig(agent.stats, agent.level, village.activeBoostKinds);
+      const cfg = compileConfig(agent.stats, agent.level, village.activeBoostKinds, {
+        provider: agent.provider,
+      });
       poll = Math.min(poll, cfg.pollIntervalMs);
     }
     await sleep(Number.isFinite(poll) ? poll : 1000);

@@ -12,9 +12,15 @@
  * SETTLE closes the position, books P&L, pays the treasury cut
  */
 
-import type { AgentClass, AgentState, Verdict } from "./types.js";
+import type { AgentClass, AgentState, Provider, Verdict } from "./types.js";
 import type { CompiledConfig, StatKey, Stats } from "./config.js";
-import { MAX_STAT, STAT_BUILDING, STAT_LABEL, normalizeStats } from "./config.js";
+import {
+  MAX_STAT,
+  STAT_BUILDING,
+  STAT_LABEL,
+  normalizeProvider,
+  normalizeStats,
+} from "./config.js";
 import type { StrategyParams } from "./types.js";
 import { CLASS_STRATEGY } from "./brain.js";
 
@@ -97,6 +103,8 @@ export interface AgentInit {
   cls: AgentClass;
   stats: Partial<Stats>;
   home: GridPos;
+  /** House the agent is wired to. Defaults to Anthropic. */
+  provider?: Provider;
   strategy?: StrategyParams;
   systemSuffix?: string;
   /** FORGE builds render with a dashed ring and carry their author's target. */
@@ -125,6 +133,8 @@ export class VillageAgent {
   readonly trainEvery: number;
 
   stats: Stats;
+  /** Mutable: REWIRE moves a live agent between houses mid-run. */
+  provider: Provider;
   level = 0;
   xp = 0;
 
@@ -170,6 +180,7 @@ export class VillageAgent {
     this.strategy = init.strategy ?? { ...CLASS_STRATEGY[init.cls] };
     this.systemSuffix = init.systemSuffix ?? "";
     this.stats = normalizeStats(init.stats);
+    this.provider = normalizeProvider(init.provider);
     this.targetStats = init.targetStats ? normalizeStats(init.targetStats) : null;
     this.frozen = init.frozen ?? false;
     this.trainEvery = init.trainEvery ?? TRAIN_EVERY_CYCLES;
@@ -396,6 +407,7 @@ export class VillageAgent {
       name: this.name,
       cls: this.cls,
       custom: this.custom,
+      provider: this.provider,
       stats: this.stats,
       level: this.level,
       xp: this.xp,
