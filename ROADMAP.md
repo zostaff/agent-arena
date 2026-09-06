@@ -19,7 +19,7 @@ read the code today** comes before what would impress them.
 
 | Date | What | Commit |
 |---|---|---|
-| 2026-09-06 | **Cost-adjusted P&L.** The inference bill is subtracted: `ASSUMED_ETH_USD`, net beside gross everywhere, FORGE verdict and BUILDS board ranked on net (`BOARD_KEY` → `dv_board_v2`), the same run priced on all three houses from one backtest, net-of-inference row in the agent inspector. 9 new tests. | `pending` |
+| 2026-09-06 | **Cost-adjusted P&L.** The inference bill is subtracted: `ASSUMED_ETH_USD`, net beside gross everywhere, FORGE verdict and BUILDS board ranked on net (`BOARD_KEY` → `dv_board_v2`), the same run priced on all three houses from one backtest, net-of-inference row in the agent inspector. 9 new tests. | `07e37de` |
 | 2026-09-06 | **Three houses.** Agents wired to Anthropic, OpenAI or xAI; ladder, pricing and wire contract per house; FORGE picker, REWIRE for 60 coins, `AGENT_PROVIDERS`; degrade-once on a rejected parameter; 29 new tests. | `8534cae` |
 | 2026-09-06 | **DEGEN VILLAGE v0.1.** Stat compiler, village economy, agent state machine, seeded sim + deterministic backtest, live Anthropic brain, Bitquery market, viem execution in dry run, isometric SVG UI, FORGE, board. 95 tests. | `7b9d892` |
 
