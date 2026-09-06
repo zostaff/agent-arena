@@ -343,6 +343,29 @@ button, input, textarea { font-family: var(--mono); }
 .dv-board-name { font-weight: 700; }
 .dv-board-owner, .dv-board-stats { color: var(--ink-dim); }
 
+/* ----------------------------------------------------------------- chain */
+
+.dv-mode { display: flex; gap: 3px; margin-right: 6px; }
+.dv-mode-on { border-color: var(--accent); color: var(--accent); background: rgba(204, 255, 0, 0.1); }
+
+.dv-prov { font-size: 9px; color: var(--ink-dim); margin: 4px 0 2px; letter-spacing: 0.04em; }
+.dv-prov b { color: var(--accent); font-weight: 600; }
+
+.dv-chain { margin-top: 10px; }
+.dv-chain-state { margin-left: 8px; font-size: 8.5px; letter-spacing: 0.1em; }
+.dv-chain-live { color: var(--up); }
+.dv-chain-error, .dv-chain-wrong-chain { color: var(--down); }
+.dv-chain-connecting { color: var(--ink-dim); }
+.dv-chain-meta { font-size: 8.5px; color: var(--ink-dim); margin: 3px 0 6px; word-break: break-all; }
+.dv-chain-row {
+  display: grid; grid-template-columns: 120px 1fr 56px; gap: 8px;
+  font-size: 10px; padding: 2px 0; border-bottom: 1px solid rgba(204, 255, 0, 0.06);
+}
+.dv-chain-sym { color: var(--accent); font-weight: 700; }
+.dv-chain-addr { color: var(--ink-dim); word-break: break-all; }
+.dv-chain-age { text-align: right; color: var(--ink-dim); }
+.dv-chain-tag { color: var(--ink-dim); }
+
 /* ----------------------------------------------------------------- crash */
 
 .dv-crash {

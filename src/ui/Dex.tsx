@@ -117,14 +117,65 @@ export function OrderBook({ snap }: { snap: Snapshot }): React.ReactElement {
   );
 }
 
+/**
+ * What the chain feed is doing. The DEX prints this verbatim: a terminal that
+ * silently shows nothing when its feed is down is worse than no terminal.
+ */
+export interface ChainStatus {
+  state: "off" | "connecting" | "live" | "wrong-chain" | "error";
+  endpoint?: string;
+  chainId?: number;
+  head?: number;
+  tokens?: Array<{ address: string; symbol: string; ageSeconds: number; blockNumber: number }>;
+  readAt?: number;
+  error?: string;
+}
+
+/**
+ * The chain feed panel: raw `eth_getLogs` output, nothing added. Ages are
+ * derived from the block gap at ten blocks a second, and say so.
+ */
+export function ChainFeed({ chain }: { chain: ChainStatus }): React.ReactElement {
+  const rows = chain.tokens ?? [];
+  return (
+    <div className="dv-chain">
+      <div className="dv-book-head">
+        ROBINHOOD CHAIN · LIVE LAUNCHES
+        <span className={`dv-chain-state dv-chain-${chain.state}`}>{chain.state}</span>
+      </div>
+      <div className="dv-chain-meta">
+        {chain.endpoint}
+        {chain.chainId !== undefined && ` · chain ${chain.chainId}`}
+        {chain.head !== undefined && ` · head ${chain.head.toLocaleString()}`}
+        {chain.readAt && ` · read ${new Date(chain.readAt).toLocaleTimeString()}`}
+      </div>
+      {chain.state === "error" && (
+        <div className="dv-empty">feed unavailable — {chain.error}</div>
+      )}
+      {chain.state === "connecting" && <div className="dv-empty">reading logs…</div>}
+      {rows.map((t) => (
+        <div className="dv-chain-row" key={t.address}>
+          <span className="dv-chain-sym">{t.symbol}</span>
+          <span className="dv-chain-addr">{t.address}</span>
+          <span className="dv-chain-age">~{t.ageSeconds}s</span>
+        </div>
+      ))}
+      {chain.state === "live" && rows.length === 0 && (
+        <div className="dv-empty">no launches in the window</div>
+      )}
+    </div>
+  );
+}
+
 export interface DexOverlayProps {
   view: VillageView;
   pair: string | null;
   onPair(pair: string): void;
+  chain?: ChainStatus;
   onClose(): void;
 }
 
-export function DexOverlay({ view, pair, onPair, onClose }: DexOverlayProps): React.ReactElement {
+export function DexOverlay({ view, pair, onPair, chain, onClose }: DexOverlayProps): React.ReactElement {
   const entries = view.snapshots;
   const active = entries.find((e) => e.pair === pair) ?? entries[0] ?? null;
   const positions = view.agents.filter((a) => a.position);
@@ -157,7 +208,19 @@ export function DexOverlay({ view, pair, onPair, onClose }: DexOverlayProps): Re
             <span>buyers {active.snap.uniqueBuyers}</span>
             <span>curve {active.snap.curveProgressPct.toFixed(1)}%</span>
             <span>reserve {active.snap.reserveEth.toFixed(2)} ETH</span>
+            {active.snap.tokenAddress && (
+              <span className="dv-chain-tag" title={active.snap.tokenAddress}>
+                {active.snap.tokenAddress.slice(0, 6)}…{active.snap.tokenAddress.slice(-4)}
+              </span>
+            )}
           </div>
+          {active.snap.provenance && (
+            <div className="dv-prov">
+              identity <b>{active.snap.provenance.identity}</b> · price{" "}
+              <b>{active.snap.provenance.price}</b> · book{" "}
+              <b>{active.snap.provenance.book}</b> · fills <b>paper</b>
+            </div>
+          )}
           <div className="dv-dex-body">
             <Candlesticks candles={active.snap.candles} />
             <OrderBook snap={active.snap} />
@@ -166,6 +229,8 @@ export function DexOverlay({ view, pair, onPair, onClose }: DexOverlayProps): Re
       ) : (
         <div className="dv-dex-meta">waiting for the first snapshot…</div>
       )}
+
+      {chain && chain.state !== "off" && <ChainFeed chain={chain} />}
 
       <div className="dv-dex-split">
         <div className="dv-dex-positions">

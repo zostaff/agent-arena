@@ -229,7 +229,8 @@ export function wireBrain(
 ): Brain {
   const timeoutMs = options.timeoutMs ?? 20_000;
   const maxRetries = options.maxRetries ?? 2;
-  const doFetch = options.fetchImpl ?? globalThis.fetch;
+  /* Bound on purpose: see the note in brain.ts. */
+  const doFetch = options.fetchImpl ?? globalThis.fetch?.bind(globalThis);
 
   async function callOnce(
     snap: Snapshot,

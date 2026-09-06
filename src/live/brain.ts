@@ -108,7 +108,9 @@ function sleep(ms: number): Promise<void> {
 export function claudeBrain(options: ClaudeBrainOptions = {}): Brain {
   const timeoutMs = options.timeoutMs ?? 20_000;
   const maxRetries = options.maxRetries ?? 2;
-  const doFetch = options.fetchImpl ?? globalThis.fetch;
+  /* Bound on purpose: a bare globalThis.fetch reference throws "Illegal
+     invocation" when called in a browser. */
+  const doFetch = options.fetchImpl ?? globalThis.fetch?.bind(globalThis);
 
   async function callOnce(
     snap: Snapshot,

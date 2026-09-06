@@ -16,6 +16,8 @@ import {
 import type { BoostKind } from "../core/config.js";
 import type { Provider } from "../core/types.js";
 import { SimMarket } from "../sim/market.js";
+import { PaperMarket } from "../paper/market.js";
+import type { ChainStatus } from "./Dex.jsx";
 import { heuristicBrain } from "../sim/brain.js";
 import { mulberry32 } from "../sim/rng.js";
 import { VillageScene } from "./Village.jsx";
@@ -52,8 +54,39 @@ const AUTOSAVE_EVERY_TICKS = 240;
 
 type Overlay = "NONE" | "DEX" | "FORGE" | "BOARD";
 
+/**
+ * SIM is the seeded world that always works offline. PAPER trades the tokens
+ * actually launching on Robinhood Chain right now — identity read from the
+ * free public RPC, prices still simulated, nothing signed. The mode is
+ * remembered per browser.
+ */
+export type MarketMode = "SIM" | "PAPER";
+const MODE_KEY = "dv_mode";
+
+function storedMode(): MarketMode {
+  try {
+    return globalThis.localStorage?.getItem(MODE_KEY) === "PAPER" ? "PAPER" : "SIM";
+  } catch {
+    return "SIM";
+  }
+}
+
 export function App(): React.ReactElement {
-  const { village } = useMemo(() => {
+  const [mode, setMode] = useState<MarketMode>(storedMode);
+  const [chain, setChain] = useState<ChainStatus>({ state: "off" });
+
+  const { village, paper } = useMemo(() => {
+    if (mode === "PAPER") {
+      const market = new PaperMarket({ universe: 6 });
+      const v = new Village({
+        market,
+        brain: heuristicBrain(),
+        rng: mulberry32(SESSION_SEED ^ 0x9e3779b9),
+        blockingDecisions: true,
+        onTick: () => market.advance(1),
+      });
+      return { village: v, paper: market };
+    }
     const market = new SimMarket({ seed: SESSION_SEED });
     const v = new Village({
       market,
@@ -62,7 +95,62 @@ export function App(): React.ReactElement {
       blockingDecisions: true,
       onTick: () => market.advance(1),
     });
-    return { village: v, market };
+    return { village: v, paper: null };
+  }, [mode]);
+
+  /* Reading the chain is the one thing here that can fail on someone else's
+     network, so it reports its own state instead of silently doing nothing. */
+  useEffect(() => {
+    if (!paper) {
+      setChain({ state: "off" });
+      return;
+    }
+    let alive = true;
+    setChain({ state: "connecting", endpoint: paper.endpoint });
+    void (async () => {
+      try {
+        const { chainId, head, ok } = await paper.verify();
+        const tokens = await paper.refresh();
+        if (!alive) return;
+        setChain({
+          state: ok ? "live" : "wrong-chain",
+          endpoint: paper.endpoint,
+          chainId,
+          head,
+          tokens,
+          readAt: Date.now(),
+        });
+      } catch (err) {
+        if (!alive) return;
+        setChain({
+          state: "error",
+          endpoint: paper.endpoint,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    })();
+    const timer = setInterval(() => {
+      void paper
+        .refresh()
+        .then((tokens) => {
+          if (alive) setChain((c) => ({ ...c, tokens, readAt: Date.now() }));
+        })
+        .catch(() => undefined);
+    }, 30_000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [paper]);
+
+  const onMode = useCallback((next: MarketMode) => {
+    try {
+      globalThis.localStorage?.setItem(MODE_KEY, next);
+    } catch {
+      /* a browser that refuses storage still gets to switch, just not to
+         remember — the mode is not worth failing over. */
+    }
+    setMode(next);
   }, []);
 
   const [view, setView] = useState<VillageView>(() => village.view());
@@ -332,6 +420,22 @@ export function App(): React.ReactElement {
           <button className={`dv-btn${overlay === "BOARD" ? " dv-btn-on" : ""}`} onClick={() => setOverlay(overlay === "BOARD" ? "NONE" : "BOARD")}>
             BOARD
           </button>
+          <div className="dv-mode">
+            {(["SIM", "PAPER"] as const).map((m) => (
+              <button
+                key={m}
+                className={`dv-btn dv-btn-tiny${mode === m ? " dv-mode-on" : ""}`}
+                onClick={() => onMode(m)}
+                title={
+                  m === "SIM"
+                    ? "seeded offline world"
+                    : "tokens launching on Robinhood Chain right now — prices still simulated"
+                }
+              >
+                {m}
+              </button>
+            ))}
+          </div>
           <button className="dv-btn dv-btn-primary" onClick={() => void onPublishVillage()}>
             PUBLISH
           </button>
@@ -385,7 +489,13 @@ export function App(): React.ReactElement {
         </div>
 
         {overlay === "DEX" && (
-          <DexOverlay view={view} pair={dexPair} onPair={setDexPair} onClose={() => setOverlay("NONE")} />
+          <DexOverlay
+            view={view}
+            pair={dexPair}
+            onPair={setDexPair}
+            chain={chain}
+            onClose={() => setOverlay("NONE")}
+          />
         )}
         {overlay === "FORGE" && (
           <Forge

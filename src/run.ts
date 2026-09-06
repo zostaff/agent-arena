@@ -1,6 +1,8 @@
 /**
  * DEGEN VILLAGE — node entry point.
  *
+ *   MODE=paper npm run paper  PaperMarket + heuristicBrain — real Robinhood
+ *                              Chain tokens, simulated prices, no keys at all
  *   MODE=sim  npm run sim    SimMarket  + heuristicBrain, 60fps
  *   MODE=live npm run live   PonsMarket + liveBrain,     pollIntervalMs
  *
@@ -17,6 +19,7 @@ import { SimMarket } from "./sim/market.js";
 import { heuristicBrain } from "./sim/brain.js";
 import { mulberry32 } from "./sim/rng.js";
 import { PonsMarket } from "./live/pons.js";
+import { PaperMarket } from "./paper/market.js";
 import type { BrainTrace } from "./live/brain.js";
 import { liveBrain } from "./live/router.js";
 
@@ -136,14 +139,63 @@ async function runLive(): Promise<void> {
   }
 }
 
+/**
+ * Paper mode: the real token universe, simulated prices, nothing signed.
+ *
+ * Needs no API key of any kind — the public RPC is free — which is what makes
+ * it the mode to hand someone who just wants to watch the bots trade.
+ */
+async function runPaper(): Promise<void> {
+  const market = new PaperMarket({ universe: Number(env("PAPER_PAIRS", "6")) });
+  const village = new Village({
+    market,
+    brain: heuristicBrain(),
+    rng: mulberry32(Number(env("SEED", "42"))),
+    blockingDecisions: true,
+    onTick: () => market.advance(1),
+  });
+
+  const { chainId, head, ok } = await market.verify();
+  console.log("DEGEN VILLAGE — paper: real Robinhood Chain tokens, simulated prices.");
+  console.log(`  rpc      ${market.endpoint}`);
+  console.log(`  chain    ${chainId}${ok ? " (Robinhood Chain)" : " — NOT Robinhood Chain"}`);
+  console.log(`  head     ${head.toLocaleString()}`);
+
+  const tokens = await market.refresh();
+  console.log(`  universe ${tokens.length} tokens, newest first:`);
+  for (const t of tokens) {
+    console.log(`    ${t.symbol.padEnd(16)} ${t.address}  ~${t.ageSeconds}s old`);
+  }
+  console.log("  identity read from chain · price and book simulated · no wallet, no signing\n");
+
+  const ticks = Number(env("TICKS", "0"));
+  const refreshEvery = Number(env("PAPER_REFRESH_TICKS", "1800"));
+  let frame = 0;
+  for (;;) {
+    await village.step();
+    frame += 1;
+    if (frame % 600 === 0) report(village, "paper");
+    if (frame % refreshEvery === 0) {
+      /* New tokens launch every few seconds on this chain; a paper session
+         that never looks again is trading a stale universe. */
+      await market.refresh().catch(() => undefined);
+    }
+    if (ticks > 0 && frame >= ticks) break;
+    await sleep(FRAME_MS);
+  }
+  report(village, "paper");
+}
+
 async function main(): Promise<void> {
   const mode = env("MODE", "sim").toLowerCase();
   if (mode === "live") {
     await runLive();
+  } else if (mode === "paper") {
+    await runPaper();
   } else if (mode === "sim") {
     await runSim();
   } else {
-    console.error(`unknown MODE "${mode}" — expected "sim" or "live"`);
+    console.error(`unknown MODE "${mode}" — expected "sim", "paper" or "live"`);
     process.exitCode = 1;
   }
 }

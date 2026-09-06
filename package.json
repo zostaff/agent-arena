@@ -2,9 +2,11 @@
   "name": "agent-arena",
   "private": true,
   "version": "0.1.0",
-  "description": "DEGEN VILLAGE — isometric village where AI agents train in buildings and trade memecoins from a terminal.",
+  "description": "DEGEN VILLAGE \u2014 isometric village where AI agents train in buildings and trade memecoins from a terminal.",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -13,7 +15,9 @@
     "live": "MODE=live tsx src/run.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "chain": "tsx scripts/chain-probe.ts",
+    "paper": "MODE=paper tsx src/run.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

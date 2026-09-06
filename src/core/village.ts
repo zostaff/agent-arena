@@ -23,6 +23,7 @@ import {
 } from "./config.js";
 import { CLASS_LENS, CLASS_STRATEGY } from "./brain.js";
 import { fillPrice } from "./market.js";
+import { skipVerdict } from "./types.js";
 import type { AgentInit, AgentTickCtx, GridPos, NotifyKind } from "./agent.js";
 import { VillageAgent } from "./agent.js";
 
@@ -754,13 +755,26 @@ export class Village {
     };
   }
 
+  /**
+   * A market that reads a live chain can be slow or briefly unreachable. That
+   * is a reason to have no pairs this tick, never a reason to stop the village.
+   */
   private async ensurePairs(): Promise<void> {
     if (this.pairs.length > 0) return;
-    this.pairs = await this.market.listPairs();
+    try {
+      this.pairs = await this.market.listPairs();
+    } catch {
+      this.pairs = [];
+    }
   }
 
-  private nextPair(): string {
-    if (this.pairs.length === 0) return "$RUG";
+  /**
+   * Null when the market has not named a pair yet. It used to fall back to a
+   * hard-coded "$RUG", which in paper mode meant an agent trading a ticker that
+   * does not exist on chain — exactly the invention this project refuses.
+   */
+  private nextPair(): string | null {
+    if (this.pairs.length === 0) return null;
     const p = this.pairs[this.pairCursor % this.pairs.length];
     this.pairCursor += 1;
     return p;
@@ -786,6 +800,13 @@ export class Village {
    */
   private dispatchDecision(agent: VillageAgent, config: CompiledConfig): void {
     const pair = agent.position?.pair ?? this.nextPair();
+    if (pair === null) {
+      /* No universe yet: skip this cycle rather than invent something to trade.
+         The agent tries again on its next poll, by which time the chain has
+         usually answered. */
+      agent.pendingVerdict = skipVerdict("no pairs yet");
+      return;
+    }
     agent.lastPair = pair;
     const work = (async () => {
       const snap = await this.market.snapshot(pair, config.ctxCandles);

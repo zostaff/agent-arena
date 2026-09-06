@@ -2,7 +2,7 @@
 
 <img src="assets/banner.png" alt="DEGEN VILLAGE — an isometric village where AI agents train in buildings and trade memecoins" width="100%">
 
-![tests](https://img.shields.io/badge/tests-142%20green-CCFF00?style=flat-square&labelColor=1C180D)
+![tests](https://img.shields.io/badge/tests-156%20green-CCFF00?style=flat-square&labelColor=1C180D)
 ![typescript](https://img.shields.io/badge/typescript-5.7-8fae00?style=flat-square&labelColor=1C180D)
 ![houses](https://img.shields.io/badge/houses-anthropic%20·%20openai%20·%20xai-c7e26a?style=flat-square&labelColor=1C180D)
 ![execution](https://img.shields.io/badge/execution-dry%20run%20by%20default-f87171?style=flat-square&labelColor=1C180D)
@@ -25,10 +25,45 @@ config editor with a progress bar in front of it.
 
 ```bash
 npm install
-npm test        # 142 tests, ~1s
+npm test        # 156 tests, ~1s
 npm run sim     # MODE=sim — seeded, deterministic, free
+npm run paper   # MODE=paper — real Robinhood Chain tokens, no keys at all
+npm run chain   # what the public RPC returns right now
 npm run dev     # the village in a browser
 ```
+
+## Paper trading on real tokens — no keys
+
+`npm run paper`, or the **PAPER** switch in the header. The bots trade the
+tokens that are launching on Robinhood Chain *right now*, read straight from
+the free public RPC — no indexer, no API key, no wallet, nothing signed.
+
+```
+rpc      https://rpc.mainnet.chain.robinhood.com     chain 4663, CORS open
+launches eth_getLogs on the Pons factory, topic0 0x8d4aad49… = TokenLaunched
+symbol   ERC-20 symbol() by eth_call
+```
+
+A real read, on the day this was written: **173 launches in an eight-minute
+window**, tokens arriving seconds apart — `$SLOPNALD`, `$HORMUZ`, `$PERONA`,
+`$VLAD TENEV`.
+
+**What is real, and what is not — the DEX prints this on every snapshot:**
+
+| Field | Source |
+|---|---|
+| token address, symbol, age | **chain** |
+| price, candles, book, curve | **sim** — Pons v2 settles through Uniswap v4 and the swap decoding is not written yet |
+| fills, P&L | **paper** — nothing signed, no wallet, no transaction |
+
+A paper P&L on a real ticker is easy to mistake for a real one, so the label is
+the feature, not decoration. When the swap decoding lands, `price` flips to
+`chain` in one place and the label changes with it. Full contract:
+[specs/10-paper-trading.md](specs/10-paper-trading.md) ·
+[specs/11-chain-feed.md](specs/11-chain-feed.md).
+
+The village **never invents a ticker**: with no universe yet it skips the
+cycle rather than trading a placeholder.
 
 ## Three houses
 
@@ -200,6 +235,8 @@ Written so a future session can pick up any part without re-reading the code.
 | [07 — UI](specs/07-ui.md) | projection, SVG anatomy, HUD, REWIRE panel, DEX overlay, palette |
 | [08 — Multiplayer](specs/08-multiplayer.md) | `window.storage`, ranking on net, `BOARD_KEY` v2, load-a-rival's-build |
 | [09 — Tests](specs/09-tests.md) | what each file covers and which assertions are load-bearing |
+| [10 — Paper trading](specs/10-paper-trading.md) | the three modes, what is real and what is simulated, reproducibility |
+| [11 — Chain feed](specs/11-chain-feed.md) | the RPC, the pinned addresses, what is read and what is *not* claimed |
 
 ## Environment
 
@@ -216,7 +253,8 @@ cp .env.example .env
 | `BITQUERY_TOKEN` | `src/live/pons.ts` |
 | `RH_RPC_URL`, `RH_PRIVATE_KEY`, `PONS_ROUTER` | `src/live/execute.ts` |
 | `DRY_RUN` | `src/live/execute.ts` — anything but `0` keeps it dry |
-| `MODE`, `SEED`, `TICKS` | `src/run.ts` |
+| `MODE`, `SEED`, `TICKS` | `src/run.ts` — `sim` / `paper` / `live` |
+| `PAPER_PAIRS`, `PAPER_REFRESH_TICKS` | `src/run.ts` — paper universe size and re-read cadence |
 
 ## What is next
 
