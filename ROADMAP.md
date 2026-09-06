@@ -27,9 +27,9 @@ never of inventing something that merely sounds like progress. Each block ends
 with the honest limit, because an update that names its own gap is the one
 people believe.
 
-Where it stands today: **6,900 lines of TypeScript across 31 files, 1,900 lines
-of tests (142 green), 1,000 lines of spec**, typechecked, tested and built by
-CI on every push.
+Where it stands today: **6,875 lines of TypeScript across 30 files, 1,745 lines
+of tests (142 green), 968 lines of spec** — typechecked, tested and built by CI
+on every push. Counted, not estimated: `find src -name '*.ts*' | xargs cat | wc -l`.
 
 ### 2026-09-07 · The village survives a reload, and CI publishes it — [`01d62db`](https://github.com/zostaff/agent-arena/commit/01d62db)
 
