@@ -59,6 +59,9 @@ then publish). 9 new tests.
   exposed it; a latch now suppresses the flush while a wipe is in flight. Unit
   tests would never have found that one: the bug lived in the browser's
   lifecycle, not in the engine.
+* **CI is green on every push**: typecheck → 142 tests → build, in about 40
+  seconds. The Pages workflow runs the same gate before anything reaches a
+  public URL.
 * **The honest limit:** the save is per browser. There is no account, no cloud
   slot, and clearing site data still clears the village.
 
@@ -202,6 +205,19 @@ shared mode — the board uses it — so the machinery exists.
 **Done means:** either a per-owner village slot that follows the player, or one
 line in the UI saying plainly that progress is local to this browser. The
 second is a fifteen-minute job and is better than an unkept implication.
+
+### 7. Finish the publish
+
+`pages.yml` builds and is ready to deploy; the site itself still has to be
+created once in Settings → Pages (Source: GitHub Actions), because the Actions
+token is refused with `Resource not accessible by integration` when it tries to
+create it. Until that switch is flipped the pages workflow will keep failing on
+every push, which is exactly the kind of permanent red that people learn to
+ignore.
+
+**Done means:** the switch is flipped and the live URL is in the README — or,
+if it stays off, `pages.yml` drops to `workflow_dispatch` so the failure is not
+a standing one.
 
 ## Later
 

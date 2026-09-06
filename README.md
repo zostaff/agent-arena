@@ -152,6 +152,12 @@ published straight from CI.
 | `src/ui/ErrorBoundary.tsx` | a crash shows the message and offers to wipe the save, instead of a white screen |
 | autosave | every 240 ticks, plus a flush on `pagehide` and `visibilitychange` |
 
+**One-time step before the first publish:** Settings → Pages → *Build and
+deployment* → Source: **GitHub Actions**. The workflow asks
+`configure-pages` to enable Pages itself, but on this repository the Actions
+token is refused with `Resource not accessible by integration`, so the site has
+to be created once by hand. Every push after that publishes on its own.
+
 **Your village survives a reload.** Treasury, building levels, running jobs,
 boosts, and every agent's stats, level, XP, house and record come back.
 Open positions deliberately do not: a position is priced against a market that
