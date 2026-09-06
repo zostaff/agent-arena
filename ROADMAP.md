@@ -27,9 +27,47 @@ never of inventing something that merely sounds like progress. Each block ends
 with the honest limit, because an update that names its own gap is the one
 people believe.
 
-Where it stands today: **6,875 lines of TypeScript across 30 files, 1,745 lines
-of tests (142 green), 968 lines of spec** — typechecked, tested and built by CI
-on every push. Counted, not estimated: `find src -name '*.ts*' | xargs cat | wc -l`.
+Where it stands today: **7,633 lines of TypeScript across 32 files, 1,967 lines
+of tests (156 green), 1,082 lines of spec** — typechecked, tested and built by
+CI on every push. Three modes: seeded sim, **paper on real chain tokens**, and
+live.
+
+### 2026-09-07 · Paper trading on real Robinhood Chain tokens — [`34e6ecc`](https://github.com/zostaff/agent-arena/commit/34e6ecc)
+
+**What changed.** A third mode. `npm run paper`, or the PAPER switch in the
+header: the bots trade the tokens launching on Robinhood Chain right now, read
+from the free public RPC. New `src/live/rpc.ts` (raw JSON-RPC, Pons log
+decoding), `src/paper/market.ts`, a live-launch panel in the DEX, `npm run
+chain`, and two new specs. 14 new tests.
+
+**For a post**
+
+* **No key, no indexer, no wallet.** The Robinhood Chain public RPC is free and
+  CORS-open, so this runs in a terminal and in the browser build alike. That is
+  the whole point: someone can watch the bots trade without signing up for
+  anything.
+* The chain is *busy*: **173 token launches in an eight-minute window** on
+  2026-09-07. Tokens arrive seconds apart — `$SLOPNALD`, `$HORMUZ`, `$PERONA`,
+  `$VLAD TENEV`. The bots trade whatever launched in the last quarter hour.
+* **What is real is labelled field by field.** Identity, symbol and age come
+  from `eth_getLogs` and `symbol()`; price and book are simulated, because Pons
+  v2 settles through Uniswap v4 and that swap decoding is not written yet. The
+  DEX prints `identity chain · price sim · book sim · fills paper` under every
+  chart. A paper P&L on a real ticker is easy to mistake for a real one — the
+  label is the feature, not decoration.
+* **The village will not invent a ticker.** The old code fell back to a
+  hard-coded `$RUG` when the market had named no pairs yet; in paper mode that
+  means trading something that does not exist on chain. It now skips the cycle.
+* **Two bugs only a browser could find.** `globalThis.fetch` called as a bare
+  reference throws *Illegal invocation* in Chrome and works fine in Node. And a
+  burst of a dozen `eth_call`s behind a `getLogs` came back empty against the
+  shared public RPC, so every token rendered as its address — paced at 70ms,
+  and a failed symbol is never cached, so the next refresh retries it.
+* Same token, same tape, on any machine: each price path is seeded from the
+  token's own address.
+* **The honest limit:** prices are simulated. This is a real universe and a
+  real clock, not a real market — and it says so on screen rather than in a
+  footnote.
 
 ### 2026-09-07 · The village survives a reload, and CI publishes it — [`01d62db`](https://github.com/zostaff/agent-arena/commit/01d62db)
 
@@ -194,9 +232,22 @@ providers to the default rather than compiling an undefined ladder.
 The trade tape shows the reason, not the brain. With three houses in one
 village that is the most interesting column on the screen and it is missing.
 
+### 6. Real prices: decode the Uniswap v4 swaps
+
+The single biggest gap in the project. Paper mode reads the token universe from
+chain and then simulates the price, because Pons v2 settles through Uniswap v4:
+a trade is a `Swap` on the PoolManager keyed by pool id, not an event on the
+Pons router. Everything downstream — the tape, the candles, the P&L — is real
+the moment this is decoded.
+
+**Done means:** the PoolManager address and pool id derivation are pinned in
+`specs/11-chain-feed.md`, `RpcMarket` serves OHLC built from real swaps, and
+`Snapshot.provenance.price` flips from `sim` to `chain`. Nothing else in the
+codebase has to change — that one label is wired through the UI already.
+
 ---
 
-### 6. A cloud save slot, or an honest note that there isn't one
+### 7. A cloud save slot, or an honest note that there isn't one
 
 The village now persists per browser. Open it on a phone and it is a different
 village, and clearing site data still wipes it. `window.storage` already has a
@@ -206,7 +257,7 @@ shared mode — the board uses it — so the machinery exists.
 line in the UI saying plainly that progress is local to this browser. The
 second is a fifteen-minute job and is better than an unkept implication.
 
-### 7. Finish the publish
+### 8. Finish the publish
 
 `pages.yml` builds and is ready to deploy; the site itself still has to be
 created once in Settings → Pages (Source: GitHub Actions), because the Actions
