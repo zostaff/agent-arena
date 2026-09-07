@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Roadmap board: shipped, next up and later">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151206"/><stop offset="1" stop-color="#1C180D"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="420" rx="14" fill="url(#bg2)"/>
+  <rect x="0.5" y="0.5" width="1199" height="419" rx="14" fill="none" stroke="#CCFF00" stroke-opacity="0.22"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="32" y="40" fill="#8fae00" font-size="13" letter-spacing="3">THE BOARD · 2026-09-07</text>
+
+    <!-- shipped -->
+    <text x="32" y="76" fill="#a3e635" font-size="12" letter-spacing="2">SHIPPED</text>
+    <g font-size="12" fill="#F2EFE0">
+      <text x="32" y="104">✓  v0.1 — the village, the stat compiler, the seeded backtest</text>
+      <text x="32" y="128">✓  three houses — anthropic · openai · xai, 101x apart on price</text>
+      <text x="32" y="152">✓  cost-adjusted P&amp;L — the inference bill is subtracted</text>
+      <text x="32" y="176">✓  persistence + CI — survives a reload, green on every push</text>
+      <text x="32" y="200">✓  paper trading — real Robinhood Chain tokens, no keys at all</text>
+    </g>
+
+    <!-- next -->
+    <text x="32" y="242" fill="#CCFF00" font-size="12" letter-spacing="2">NEXT UP · in order</text>
+    <g font-size="12" fill="#F2EFE0">
+      <text x="32" y="270" fill="#CCFF00">1  the first trade must not take five minutes</text>
+      <text x="32" y="294">2  prove the OpenAI and xAI wires against a live 200</text>
+      <text x="32" y="318">3  execute.ts verified against the real router ABI</text>
+      <text x="620" y="270">4  latency measured per house · 5  import a build JSON</text>
+      <text x="620" y="294">6  the tape says which house produced each verdict</text>
+      <text x="620" y="318" fill="#CCFF00">7  REAL PRICES — decode the Uniswap v4 swaps</text>
+    </g>
+
+    <text x="32" y="360" fill="#9a9578" font-size="12" letter-spacing="2">LATER</text>
+    <text x="32" y="384" fill="#9a9578" font-size="11.5">cloud save · rank villages on net · replay export · mobile layout · a fourth house, only with a reason</text>
+
+    <line x1="32" y1="400" x2="1168" y2="400" stroke="#CCFF00" stroke-opacity="0.12"/>
+    <text x="32" y="412" fill="#8fae00" font-size="10">ordering rule: what would embarrass the project if someone read it today comes before what would impress them</text>
+  </g>
+</svg>

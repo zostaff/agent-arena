@@ -15,7 +15,11 @@ Nothing in a *For a post* block is aspirational. If a number is not measured
 yet, it is written as the limit instead of as the achievement.
 
 The ordering rule for *Next up*: **what would embarrass the project if someone
-read the code today** comes before what would impress them.
+read the code today** comes before what would impress them — with one standing
+exception: something that spoils the first thirty seconds for a new player
+outranks everything, because nobody reaches the good part through a bad start.
+
+![The board](assets/roadmap-board.png)
 
 ---
 
@@ -39,6 +43,8 @@ header: the bots trade the tokens launching on Robinhood Chain right now, read
 from the free public RPC. New `src/live/rpc.ts` (raw JSON-RPC, Pons log
 decoding), `src/paper/market.ts`, a live-launch panel in the DEX, `npm run
 chain`, and two new specs. 14 new tests.
+
+![Three modes](assets/modes.png)
 
 **For a post**
 
@@ -68,6 +74,12 @@ chain`, and two new specs. 14 new tests.
 * **The honest limit:** prices are simulated. This is a real universe and a
   real clock, not a real market — and it says so on screen rather than in a
   footnote.
+
+![The DEX reading Robinhood Chain live](assets/shot-chain-feed.jpg)
+
+*The DEX at 03:00 on 2026-09-07: `live`, chain 4663, head 56,388,633, and six
+tokens that had existed for seconds. Every address is real and clickable in a
+block explorer; the chart above them is not.*
 
 ### 2026-09-07 · The village survives a reload, and CI publishes it — [`01d62db`](https://github.com/zostaff/agent-arena/commit/01d62db)
 
@@ -130,6 +142,11 @@ gained a net-of-inference row. 9 new tests.
 * **The honest limit:** this is a seeded simulation, not a live P&L. It
   measures builds against each other, not the market.
 
+![FORGE with the house picker](assets/shot-forge.jpg)
+
+*The FORGE: 20 stat points, the house the build runs on, and a compiled config
+that reprices as you click. The backtest underneath reports NET beside gross.*
+
 ### 2026-09-06 · Three houses — [`8534cae`](https://github.com/zostaff/agent-arena/commit/8534cae)
 
 **What changed.** Every agent is wired to Anthropic, OpenAI or xAI. Ladder,
@@ -184,11 +201,33 @@ market, viem execution in dry run, isometric SVG UI, FORGE, board. 95 tests.
 * **The honest limit:** execution defaults to `dryRun: true` and prints the
   call it would have sent. It has never signed a transaction.
 
+![The village](assets/shot-village.jpg)
+
+*Four agents, eight buildings, one terminal. The left panel is the whole idea:
+stat bars on top, the config they compile to underneath.*
+
 ---
 
 ## Next up
 
-### 1. Prove the two new wires against a live 200
+### 1. The first trade must not take five minutes
+
+Found while screenshotting paper mode on 2026-09-07: at tick 178 the DEX still
+said *waiting for the first snapshot*. An agent starts in REST, walks to a
+building, and burns **260 ticks of training** before it ever scans. Someone who
+opens the page to watch bots trade sees a village doing chores.
+
+This is the single worst thing about the product right now, and it is not a
+code-quality problem — it is a first-impression problem, which is why it sits
+above everything else.
+
+**Done means:** an agent's first cycle is a decision, not a training session
+(`cyclesSinceTrain` starts satisfied), the opening speed is higher than 1x, and
+a fresh village shows a fill inside the first thirty seconds. None of that
+changes the economy — training still costs what it costs from the second cycle
+on.
+
+### 2. Prove the two new wires against a live 200
 
 `providers.test.ts` drives OpenAI and xAI through fixtures. Neither has ever
 answered this code for real. Everything about the request shape is *inferred
@@ -199,7 +238,7 @@ precisely why degrade-once exists.
 pasted into `specs/04-live.md`, and any shape correction the real response
 forced. Until then the honest claim is "typed and tested", not "working".
 
-### 2. `execute.ts` verified against the real router ABI before anyone unsets `DRY_RUN`
+### 3. `execute.ts` verified against the real router ABI before anyone unsets `DRY_RUN`
 
 The dry-run path prints the exact call it would send. Nobody has checked that
 call against the deployed Pons router ABI on chain 4663. `DRY_RUN=0` is one
@@ -209,7 +248,7 @@ environment variable away from being someone's real money.
 swap is asserted in a test, and the README says plainly which router address
 was verified and when.
 
-### 3. Latency measured per house, never assumed
+### 4. Latency measured per house, never assumed
 
 `BrainTrace.ms` is recorded and then thrown away. Round-trip time is a real
 difference between houses and it belongs in the HUD — as a *measurement*, with
@@ -219,7 +258,7 @@ a sample count.
 It must not feed the stat compiler: SPD is the poll interval the player bought,
 not a vendor's mood.
 
-### 4. FORGE can import a build JSON
+### 5. FORGE can import a build JSON
 
 EXPORT JSON exists; there is no way back in. A build shared outside the board
 is currently a screenshot.
@@ -227,12 +266,12 @@ is currently a screenshot.
 **Done means:** a paste box that validates and loads, rejecting unknown
 providers to the default rather than compiling an undefined ladder.
 
-### 5. The DEX overlay says which house produced each verdict
+### 6. The DEX overlay says which house produced each verdict
 
 The trade tape shows the reason, not the brain. With three houses in one
 village that is the most interesting column on the screen and it is missing.
 
-### 6. Real prices: decode the Uniswap v4 swaps
+### 7. Real prices: decode the Uniswap v4 swaps
 
 The single biggest gap in the project. Paper mode reads the token universe from
 chain and then simulates the price, because Pons v2 settles through Uniswap v4:
@@ -247,7 +286,7 @@ codebase has to change — that one label is wired through the UI already.
 
 ---
 
-### 7. A cloud save slot, or an honest note that there isn't one
+### 8. A cloud save slot, or an honest note that there isn't one
 
 The village now persists per browser. Open it on a phone and it is a different
 village, and clearing site data still wipes it. `window.storage` already has a
@@ -257,7 +296,7 @@ shared mode — the board uses it — so the machinery exists.
 line in the UI saying plainly that progress is local to this browser. The
 second is a fifteen-minute job and is better than an unkept implication.
 
-### 8. Finish the publish
+### 9. Finish the publish
 
 `pages.yml` builds and is ready to deploy; the site itself still has to be
 created once in Settings → Pages (Source: GitHub Actions), because the Actions

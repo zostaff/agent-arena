@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="330" viewBox="0 0 1200 330" role="img" aria-label="Three modes: sim, paper and live — what each one needs and what is real in it">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151206"/><stop offset="1" stop-color="#1C180D"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="330" rx="14" fill="url(#bg)"/>
+  <rect x="0.5" y="0.5" width="1199" height="329" rx="14" fill="none" stroke="#CCFF00" stroke-opacity="0.22"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="32" y="40" fill="#8fae00" font-size="13" letter-spacing="3">THREE MODES · WHAT EACH ONE NEEDS, AND WHAT IS REAL IN IT</text>
+
+    <!-- SIM -->
+    <rect x="32" y="62" width="360" height="232" rx="11" fill="#0E0C05" fill-opacity="0.8" stroke="#CCFF00" stroke-opacity="0.18"/>
+    <text x="56" y="94" fill="#9a9578" font-size="19" font-weight="700" letter-spacing="2">SIM</text>
+    <text x="56" y="118" fill="#9a9578" font-size="11.5">npm run sim</text>
+    <line x1="56" y1="132" x2="368" y2="132" stroke="#CCFF00" stroke-opacity="0.12"/>
+    <text x="56" y="156" fill="#9a9578" font-size="11.5">keys</text>   <text x="368" y="156" fill="#F2EFE0" font-size="11.5" text-anchor="end">none</text>
+    <text x="56" y="180" fill="#9a9578" font-size="11.5">market</text> <text x="368" y="180" fill="#F2EFE0" font-size="11.5" text-anchor="end">seeded random walk</text>
+    <text x="56" y="204" fill="#9a9578" font-size="11.5">tokens</text> <text x="368" y="204" fill="#F2EFE0" font-size="11.5" text-anchor="end">invented</text>
+    <text x="56" y="228" fill="#9a9578" font-size="11.5">brain</text>  <text x="368" y="228" fill="#F2EFE0" font-size="11.5" text-anchor="end">heuristic</text>
+    <text x="56" y="252" fill="#9a9578" font-size="11.5">fills</text>  <text x="368" y="252" fill="#F2EFE0" font-size="11.5" text-anchor="end">simulated</text>
+    <text x="56" y="278" fill="#8fae00" font-size="10.5">deterministic · the leaderboard runs here</text>
+
+    <!-- PAPER -->
+    <rect x="420" y="62" width="360" height="232" rx="11" fill="#0E0C05" fill-opacity="0.9" stroke="#CCFF00" stroke-opacity="0.55"/>
+    <text x="444" y="94" fill="#CCFF00" font-size="19" font-weight="700" letter-spacing="2">PAPER</text>
+    <text x="444" y="118" fill="#9a9578" font-size="11.5">npm run paper</text>
+    <line x1="444" y1="132" x2="756" y2="132" stroke="#CCFF00" stroke-opacity="0.2"/>
+    <text x="444" y="156" fill="#9a9578" font-size="11.5">keys</text>   <text x="756" y="156" fill="#CCFF00" font-size="11.5" text-anchor="end">none</text>
+    <text x="444" y="180" fill="#9a9578" font-size="11.5">market</text> <text x="756" y="180" fill="#F2EFE0" font-size="11.5" text-anchor="end">public RPC, chain 4663</text>
+    <text x="444" y="204" fill="#9a9578" font-size="11.5">tokens</text> <text x="756" y="204" fill="#CCFF00" font-size="11.5" text-anchor="end">REAL · seconds old</text>
+    <text x="444" y="228" fill="#9a9578" font-size="11.5">price</text>  <text x="756" y="228" fill="#F2EFE0" font-size="11.5" text-anchor="end">simulated — and labelled</text>
+    <text x="444" y="252" fill="#9a9578" font-size="11.5">fills</text>  <text x="756" y="252" fill="#F2EFE0" font-size="11.5" text-anchor="end">paper · nothing signed</text>
+    <text x="444" y="278" fill="#8fae00" font-size="10.5">the mode to hand someone who wants to watch</text>
+
+    <!-- LIVE -->
+    <rect x="808" y="62" width="360" height="232" rx="11" fill="#0E0C05" fill-opacity="0.8" stroke="#CCFF00" stroke-opacity="0.18"/>
+    <text x="832" y="94" fill="#9a9578" font-size="19" font-weight="700" letter-spacing="2">LIVE</text>
+    <text x="832" y="118" fill="#9a9578" font-size="11.5">npm run live</text>
+    <line x1="832" y1="132" x2="1144" y2="132" stroke="#CCFF00" stroke-opacity="0.12"/>
+    <text x="832" y="156" fill="#9a9578" font-size="11.5">keys</text>   <text x="1144" y="156" fill="#F2EFE0" font-size="11.5" text-anchor="end">2+ · model · bitquery</text>
+    <text x="832" y="180" fill="#9a9578" font-size="11.5">market</text> <text x="1144" y="180" fill="#F2EFE0" font-size="11.5" text-anchor="end">Bitquery OHLC</text>
+    <text x="832" y="204" fill="#9a9578" font-size="11.5">brain</text>  <text x="1144" y="204" fill="#F2EFE0" font-size="11.5" text-anchor="end">anthropic · openai · xai</text>
+    <text x="832" y="228" fill="#9a9578" font-size="11.5">execution</text><text x="1144" y="228" fill="#f87171" font-size="11.5" text-anchor="end">dry run until DRY_RUN=0</text>
+    <text x="832" y="252" fill="#9a9578" font-size="11.5">wires</text>  <text x="1144" y="252" fill="#fbbf24" font-size="11.5" text-anchor="end">typed, not yet answered</text>
+    <text x="832" y="278" fill="#8fae00" font-size="10.5">the only mode that can cost money</text>
+
+    <text x="32" y="318" fill="#9a9578" font-size="10.5">Never blurred: every snapshot carries provenance — identity chain · price sim · book sim · fills paper.</text>
+  </g>
+</svg>
