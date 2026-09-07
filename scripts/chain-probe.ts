@@ -8,7 +8,8 @@
  * chain stops matching the fixtures.
  */
 
-import { PonsLaunchFeed, RH_CHAIN_ID } from "../src/live/rpc.js";
+import { PonsLaunchFeed, RobinhoodRpc, RH_CHAIN_ID, PONS_ROUTER } from "../src/live/rpc.js";
+import { verifyRouterSelectors } from "../src/live/execute.js";
 
 async function main(): Promise<void> {
   const feed = new PonsLaunchFeed();
@@ -31,6 +32,14 @@ async function main(): Promise<void> {
   if (tokens.length === 0) {
     console.log("  no launches in the window — widen lookbackBlocks or check the factory address");
   }
+
+  /* The gate that stands between this repo and someone's real money. */
+  const report = await verifyRouterSelectors(PONS_ROUTER, new RobinhoodRpc());
+  console.log(`\nrouter    ${report.router}  ${report.codeBytes} bytes`);
+  console.log(`  pinned buy   ${report.buyPresent ? "present" : "ABSENT — would revert"}`);
+  console.log(`  pinned sell  ${report.sellPresent ? "present" : "ABSENT — would revert"}`);
+  console.log(`  observed buy ${report.observedBuyPresent ? "present (argument order unconfirmed)" : "absent"}`);
+  console.log(`  safe to send ${report.safeToSend ? "yes" : "NO — execution refuses to sign"}`);
 }
 
 main().catch((err) => {

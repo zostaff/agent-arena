@@ -39,6 +39,14 @@ written. Until it is, `PaperMarket` labels price as `sim` — see
 `10-paper-trading.md`. This is the difference between a project that reads
 chains and a project that says it does.
 
+## The router, read rather than assumed
+
+`selectorPresent(code, selector)` plus `eth_getCode` is how `execute.ts` checks
+that a call can dispatch before it signs. Crude by design: a selector can live
+behind a proxy, and a match does not prove the arguments mean what you think.
+A miss is proof, and that is the direction that matters. See `04-live.md` for
+what it found.
+
 ## Rules this file follows
 
 * **Nothing is invented to fill a column.** A token whose `symbol()` cannot be

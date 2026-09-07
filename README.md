@@ -2,7 +2,7 @@
 
 <img src="assets/banner.png" alt="DEGEN VILLAGE — an isometric village where AI agents train in buildings and trade memecoins" width="100%">
 
-![tests](https://img.shields.io/badge/tests-156%20green-CCFF00?style=flat-square&labelColor=1C180D)
+![tests](https://img.shields.io/badge/tests-162%20green-CCFF00?style=flat-square&labelColor=1C180D)
 ![typescript](https://img.shields.io/badge/typescript-5.7-8fae00?style=flat-square&labelColor=1C180D)
 ![houses](https://img.shields.io/badge/houses-anthropic%20·%20openai%20·%20xai-c7e26a?style=flat-square&labelColor=1C180D)
 ![execution](https://img.shields.io/badge/execution-dry%20run%20by%20default-f87171?style=flat-square&labelColor=1C180D)
@@ -25,7 +25,7 @@ config editor with a progress bar in front of it.
 
 ```bash
 npm install
-npm test        # 156 tests, ~1s
+npm test        # 162 tests, ~1s
 npm run sim     # MODE=sim — seeded, deterministic, free
 npm run paper   # MODE=paper — real Robinhood Chain tokens, no keys at all
 npm run chain   # what the public RPC returns right now
@@ -215,7 +215,11 @@ the engine knows, and refuses a save it does not recognise instead of guessing.
   again immediately without it, outside the retry budget. A silently dead house
   is worse than a slightly slower one.
 * `execute.ts` defaults to `dryRun: true` and prints the exact call it would
-  have sent. `DRY_RUN=0` is the only way off.
+  have sent. `DRY_RUN=0` is the only way off — and even then a **selector
+  preflight** refuses to sign a call whose selector is not in the deployed
+  router's bytecode. Reading the real router on 2026-09-07 showed the ABI
+  pinned here since day one was wrong: `DRY_RUN=0` would have reverted on the
+  first trade. `npm run chain` prints the check.
 * A fill whose realised slippage exceeds the agent's `slippageBps` is refused,
   not eaten.
 

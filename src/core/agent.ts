@@ -149,8 +149,18 @@ export class VillageAgent {
   target: GridPos | null = null;
 
   trainingStat: StatKey = "spd";
-  /** Decision cycles completed since the last training session. */
-  cyclesSinceTrain = TRAIN_EVERY_CYCLES;
+  /**
+   * Decision cycles completed since the last training session.
+   *
+   * Starts at 0, which means the FIRST thing a new agent does is trade, not
+   * train. It used to start "due", so a fresh village spent its first ~300
+   * ticks walking to a building and standing in it — someone who opened the
+   * page to watch bots trade watched a village do chores instead. Training
+   * still costs exactly what it costs from the second cycle onwards.
+   *
+   * Backtests are unaffected: a frozen agent never trains at all.
+   */
+  cyclesSinceTrain = 0;
   trainTicksLeft = 0;
   restTicksLeft = 0;
 

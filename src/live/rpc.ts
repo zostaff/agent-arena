@@ -139,6 +139,10 @@ export class RobinhoodRpc {
     ]);
   }
 
+  async getCode(address: string): Promise<string> {
+    return this.call<string>("eth_getCode", [address, "latest"]);
+  }
+
   async ethCall(to: string, data: string): Promise<string> {
     return this.call<string>("eth_call", [{ to, data }, "latest"]);
   }
@@ -338,6 +342,20 @@ export class PonsLaunchFeed {
 
 function pause(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Whether a 4-byte selector appears in deployed bytecode.
+ *
+ * Crude on purpose: a selector can live behind a proxy, and a match is not a
+ * guarantee that the arguments mean what you think. But a MISS is proof — the
+ * call cannot possibly dispatch — and that is the direction that matters
+ * before signing anything.
+ */
+export function selectorPresent(code: string, selector: string): boolean {
+  const needle = selector.replace(/^0x/, "").toLowerCase();
+  if (needle.length !== 8) return false;
+  return code.toLowerCase().includes(needle);
 }
 
 export function shortAddress(address: string): string {

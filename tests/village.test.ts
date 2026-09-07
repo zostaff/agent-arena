@@ -165,3 +165,54 @@ describe("agent state machine", () => {
     expect(xpToNext(4)).toBe(240);
   });
 });
+
+describe("cold start", () => {
+  it("puts a fresh agent on the tape before it trains", async () => {
+    const market = new SimMarket({ seed: 42 });
+    const v = new Village({
+      market,
+      brain: heuristicBrain(),
+      rng: mulberry32(42),
+      blockingDecisions: true,
+      onTick: () => market.advance(1),
+    });
+
+    /* Every agent starts owing no training, so REST leads straight to SCAN. */
+    for (const agent of v.agents) expect(agent.cyclesSinceTrain).toBe(0);
+
+    const states = new Set<string>();
+    let firstDecisionTick = -1;
+    for (let t = 0; t < 260; t++) {
+      await v.step();
+      for (const a of v.agents) {
+        states.add(a.state);
+        if (firstDecisionTick < 0 && a.decisions > 0) firstDecisionTick = t;
+      }
+    }
+
+    /* 260 ticks is one training session at building level 1 — the whole point
+       is that the first decision lands long before that. */
+    expect(firstDecisionTick).toBeGreaterThanOrEqual(0);
+    expect(firstDecisionTick).toBeLessThan(120);
+    expect(states.has("SCAN")).toBe(true);
+    expect(states.has("DECIDE")).toBe(true);
+  });
+
+  it("still trains on the cadence after the first cycles", async () => {
+    const market = new SimMarket({ seed: 7 });
+    const v = new Village({
+      market,
+      brain: heuristicBrain(),
+      rng: mulberry32(7),
+      blockingDecisions: true,
+      onTick: () => market.advance(1),
+    });
+
+    let trained = false;
+    for (let t = 0; t < 4000 && !trained; t++) {
+      await v.step();
+      trained = v.agents.some((a) => a.state === "TRAIN");
+    }
+    expect(trained).toBe(true);
+  });
+});

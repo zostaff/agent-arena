@@ -19,6 +19,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Verdict } from "../core/types.js";
+import { selectorPresent } from "./rpc.js";
 
 /** Robinhood Chain — Arbitrum Orbit L2. */
 export const ROBINHOOD_CHAIN_ID = 4663;
@@ -37,6 +38,63 @@ export const robinhoodChain = defineChain({
   },
   testnet: false,
 });
+
+/**
+ * SELECTOR PREFLIGHT — added 2026-09-07, after reading the deployed router.
+ *
+ * `eth_getCode` on 0xe33e…2948 (4,416 bytes) does NOT contain the selector for
+ * `buy(address,uint256,uint256)` — the signature this file had pinned since
+ * day one. The router's real buy is `buy(uint256,uint256,address)`
+ * (0x59a87bc1), a different argument order, and no `sell` selector matches any
+ * plausible signature we tried: sells evidently route elsewhere.
+ *
+ * So the ABI below was wrong, and `DRY_RUN=0` would have reverted on the first
+ * trade. Rather than guess at argument semantics — the one mistake here that
+ * costs real money — the executor now REFUSES to send any call whose selector
+ * is not present in the deployed bytecode, and dry runs print the check.
+ *
+ * A selector match is not proof that the arguments mean what we think, so the
+ * refusal stays until the argument order is confirmed against a real trade.
+ * A MISS, though, is proof: that call cannot dispatch. See specs/04-live.md.
+ */
+export const PINNED_BUY_SIGNATURE = "buy(address,uint256,uint256)";
+export const PINNED_BUY_SELECTOR = "0xa59ac6dd";
+export const PINNED_SELL_SIGNATURE = "sell(address,uint256,uint256,uint256)";
+export const PINNED_SELL_SELECTOR = "0x92cdbac5";
+/** Read off the deployed router on 2026-09-07. Argument meaning unconfirmed. */
+export const OBSERVED_BUY_SELECTOR = "0x59a87bc1";
+export const OBSERVED_BUY_SIGNATURE = "buy(uint256,uint256,address)";
+
+export interface SelectorReport {
+  router: string;
+  codeBytes: number;
+  buyPresent: boolean;
+  sellPresent: boolean;
+  observedBuyPresent: boolean;
+  /** True only when every selector this file would send is dispatchable. */
+  safeToSend: boolean;
+}
+
+/**
+ * Reads the router's bytecode and reports which of the pinned selectors could
+ * actually dispatch. Costs one `eth_getCode`.
+ */
+export async function verifyRouterSelectors(
+  router: string,
+  rpc: { getCode(address: string): Promise<string> },
+): Promise<SelectorReport> {
+  const code = await rpc.getCode(router);
+  const buyPresent = selectorPresent(code, PINNED_BUY_SELECTOR);
+  const sellPresent = selectorPresent(code, PINNED_SELL_SELECTOR);
+  return {
+    router,
+    codeBytes: Math.max(0, (code.replace(/^0x/, "").length / 2) | 0),
+    buyPresent,
+    sellPresent,
+    observedBuyPresent: selectorPresent(code, OBSERVED_BUY_SELECTOR),
+    safeToSend: buyPresent && sellPresent,
+  };
+}
 
 /** The pinned router surface. buy() is payable; ETH rides in msg.value. */
 export const PONS_ROUTER_ABI = [
@@ -118,6 +176,7 @@ function applySlippage(amount: bigint, slippageBps: number): bigint {
 
 export class PonsExecutor {
   readonly dryRun: boolean;
+  private selectorReport: SelectorReport | null = null;
   private readonly router: Address;
   private readonly deadlineSeconds: number;
   private readonly log: (line: string) => void;
@@ -161,6 +220,21 @@ export class PonsExecutor {
     return BigInt(Math.floor(Date.now() / 1000) + this.deadlineSeconds);
   }
 
+  /**
+   * One `eth_getCode`, cached for the process: are the selectors this file
+   * would send actually dispatchable on the deployed router?
+   */
+  private async preflight(): Promise<SelectorReport> {
+    if (!this.selectorReport) {
+      const { pub } = this.clients();
+      this.selectorReport = await verifyRouterSelectors(this.router, {
+        getCode: async (address) =>
+          (await pub.getBytecode({ address: address as Address })) ?? "0x",
+      });
+    }
+    return this.selectorReport;
+  }
+
   private async send(
     action: "BUY" | "SELL",
     pair: string,
@@ -171,6 +245,46 @@ export class PonsExecutor {
       this.log(`[DRY RUN] ${line}`);
       return { dryRun: true, action, pair, line, hash: null, status: "dry-run" };
     }
+
+    /* The selector check is the last gate before a signature. It refuses far
+       more often than it should have to — which is the point: the pinned ABI
+       was wrong for the entire life of this file and nobody noticed, because
+       nothing ever tried to send. */
+    try {
+      const report = await this.preflight();
+      if (!report.safeToSend) {
+        const detail =
+          `router ${report.router} (${report.codeBytes} bytes) does not expose ` +
+          `${report.buyPresent ? "" : PINNED_BUY_SIGNATURE + " "}` +
+          `${report.sellPresent ? "" : PINNED_SELL_SIGNATURE}`.trim() +
+          (report.observedBuyPresent
+            ? ` — it does expose ${OBSERVED_BUY_SIGNATURE}, whose argument order is unconfirmed`
+            : "");
+        this.log(`[REFUSED] ${line} :: ${detail}`);
+        return {
+          dryRun: false,
+          action,
+          pair,
+          line,
+          hash: null,
+          status: "failed",
+          error: `selector preflight refused: ${detail}`,
+        };
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.log(`[REFUSED] ${line} :: preflight unavailable (${msg})`);
+      return {
+        dryRun: false,
+        action,
+        pair,
+        line,
+        hash: null,
+        status: "failed",
+        error: `selector preflight unavailable: ${msg}`,
+      };
+    }
+
     try {
       this.log(`[SEND] ${line}`);
       const hash = await call();

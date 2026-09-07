@@ -220,3 +220,44 @@ describe("the village never invents a ticker", () => {
     expect(v.tick).toBe(50);
   });
 });
+
+describe("the selector gate", () => {
+  it("spots a selector that is present and one that is not", async () => {
+    const { verifyRouterSelectors, PINNED_BUY_SELECTOR, OBSERVED_BUY_SELECTOR } =
+      await import("../src/live/execute.js");
+
+    /* bytecode that dispatches only the observed buy, as the real router does */
+    const code = `0x6080604052${OBSERVED_BUY_SELECTOR.slice(2)}806100206000396000f3fe`;
+    const report = await verifyRouterSelectors("0xrouter", { getCode: async () => code });
+
+    expect(report.observedBuyPresent).toBe(true);
+    expect(report.buyPresent).toBe(false);
+    expect(report.sellPresent).toBe(false);
+    expect(report.safeToSend).toBe(false);
+    expect(report.codeBytes).toBeGreaterThan(0);
+    expect(PINNED_BUY_SELECTOR).toBe("0xa59ac6dd");
+  });
+
+  it("calls it safe only when every selector it would send is dispatchable", async () => {
+    const { verifyRouterSelectors, PINNED_BUY_SELECTOR, PINNED_SELL_SELECTOR } =
+      await import("../src/live/execute.js");
+    const both = `0x${PINNED_BUY_SELECTOR.slice(2)}dead${PINNED_SELL_SELECTOR.slice(2)}beef`;
+    const report = await verifyRouterSelectors("0xrouter", { getCode: async () => both });
+    expect(report.safeToSend).toBe(true);
+  });
+
+  it("treats an empty account as unsafe rather than unknown", async () => {
+    const { verifyRouterSelectors } = await import("../src/live/execute.js");
+    const report = await verifyRouterSelectors("0xnothing", { getCode: async () => "0x" });
+    expect(report.codeBytes).toBe(0);
+    expect(report.safeToSend).toBe(false);
+  });
+
+  it("selectorPresent refuses a malformed selector instead of matching loosely", async () => {
+    const { selectorPresent } = await import("../src/live/rpc.js");
+    expect(selectorPresent("0xa59ac6dd", "0xa59ac6dd")).toBe(true);
+    expect(selectorPresent("0xA59AC6DD", "0xa59ac6dd")).toBe(true);
+    expect(selectorPresent("0xa59ac6dd", "0xa59a")).toBe(false);
+    expect(selectorPresent("0xa59ac6dd", "")).toBe(false);
+  });
+});

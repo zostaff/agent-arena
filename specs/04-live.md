@@ -163,6 +163,33 @@ slippage on a real fill, is exactly right.
 
 ## `execute.ts` — viem on Robinhood Chain
 
+### The selector preflight, and what it found
+
+On 2026-09-07 the deployed router was read for the first time:
+
+```
+eth_getCode 0xe33e9e479df8802cb0866d5d05258bec4cf62948  ->  4,416 bytes
+  buy(address,uint256,uint256)         0xa59ac6dd   ABSENT
+  sell(address,uint256,uint256,uint256) 0x92cdbac5  ABSENT
+  buy(uint256,uint256,address)         0x59a87bc1   present
+```
+
+**The ABI pinned in this file was wrong from day one.** `DRY_RUN=0` would have
+reverted on the first trade. Nobody noticed because nothing ever tried to send.
+
+The router's real buy takes its arguments in a different order, and no `sell`
+selector matches any plausible signature — sells evidently route elsewhere,
+which fits Pons v2 settling through Uniswap v4.
+
+So `send()` now runs a **preflight**: one `eth_getCode`, cached per process,
+and it refuses to sign anything whose selector is not in the deployed
+bytecode. `npm run chain` prints the same report.
+
+A match is *not* proof that the arguments mean what we think, so the refusal
+stands until an argument order is confirmed against a real trade — guessing at
+argument semantics is the one mistake here that costs money. A **miss**, on the
+other hand, is proof: that call cannot dispatch.
+
 * Chain id **4663**, Arbitrum Orbit L2, defined with `defineChain`.
 * Router ABI as pinned: `buy(address token, uint256 minTokensOut, uint256 deadline) payable`,
   plus a mirroring `sell(token, tokensIn, minEthOut, deadline)` for the exit leg.
