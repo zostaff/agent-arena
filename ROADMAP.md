@@ -36,6 +36,38 @@ of tests (156 green), 1,082 lines of spec** — typechecked, tested and built by
 CI on every push. Three modes: seeded sim, **paper on real chain tokens**, and
 live.
 
+### 2026-09-07 · Cold start fixed, and a router ABI that was wrong all along — [`ca97ddd`](https://github.com/zostaff/agent-arena/commit/ca97ddd)
+
+**What changed.** Two roadmap items in one pass: a new agent now trades before
+it trains, and `execute.ts` refuses to sign any call whose selector is not in
+the deployed router's bytecode. 6 new tests.
+
+**For a post**
+
+* **The first trade came 6.7x sooner.** First decision moved from tick 497 to
+  **74**, first fill from 515 to **207** — measured, not estimated. An agent
+  used to start its life owing a training session, so a fresh village spent its
+  opening minutes doing chores while someone watched.
+* **Reading the deployed router found the ABI had been wrong from day one.**
+  `eth_getCode` on `0xe33e…2948` (4,416 bytes) does not contain the selector
+  for `buy(address,uint256,uint256)` — the signature pinned in the code since
+  the first commit. `DRY_RUN=0` would have reverted on the very first trade.
+  Nobody noticed because nothing had ever tried to send.
+* The router's real buy is **`buy(uint256,uint256,address)`** — a different
+  argument order — and no `sell` selector matches any plausible signature,
+  which fits Pons v2 settling through Uniswap v4 rather than through the
+  router.
+* **The fix is a refusal, not a guess.** One `eth_getCode` before signing; a
+  call whose selector cannot dispatch is refused. Guessing at argument order is
+  the single mistake here that costs real money, so a selector *match* does not
+  unlock anything either — the refusal stands until an order is confirmed
+  against a real trade. A miss, though, is proof.
+* `npm run chain` prints the gate in four lines: `pinned buy ABSENT — would
+  revert`, `pinned sell ABSENT`, `observed buy present (argument order
+  unconfirmed)`, `safe to send NO`.
+* **The honest limit:** this makes execution *safe*, not *working*. The real
+  buy path is still unwritten, and the sell path is still unknown.
+
 ### 2026-09-07 · Paper trading on real Robinhood Chain tokens — [`34e6ecc`](https://github.com/zostaff/agent-arena/commit/34e6ecc)
 
 **What changed.** A third mode. `npm run paper`, or the PAPER switch in the
@@ -210,24 +242,19 @@ stat bars on top, the config they compile to underneath.*
 
 ## Next up
 
-### 1. The first trade must not take five minutes
+### 2. The real buy and sell paths
 
-Found while screenshotting paper mode on 2026-09-07: at tick 178 the DEX still
-said *waiting for the first snapshot*. An agent starts in REST, walks to a
-building, and burns **260 ticks of training** before it ever scans. Someone who
-opens the page to watch bots trade sees a village doing chores.
+The selector preflight proved the pinned ABI cannot dispatch and now refuses to
+sign — safe, but not working. `buy(uint256,uint256,address)` exists on the
+router with an unconfirmed argument order, and no `sell` selector was found at
+all.
 
-This is the single worst thing about the product right now, and it is not a
-code-quality problem — it is a first-impression problem, which is why it sits
-above everything else.
+**Done means:** the argument order is confirmed from a real buy transaction's
+calldata on chain, the sell path is located (router, curve engine, or the v4
+PoolManager), both are pinned with the transaction hash that proved them, and
+the preflight goes green on its own rather than by being told to.
 
-**Done means:** an agent's first cycle is a decision, not a training session
-(`cyclesSinceTrain` starts satisfied), the opening speed is higher than 1x, and
-a fresh village shows a fill inside the first thirty seconds. None of that
-changes the economy — training still costs what it costs from the second cycle
-on.
-
-### 2. Prove the two new wires against a live 200
+### 3. Prove the two new wires against a live 200
 
 `providers.test.ts` drives OpenAI and xAI through fixtures. Neither has ever
 answered this code for real. Everything about the request shape is *inferred
@@ -237,16 +264,6 @@ precisely why degrade-once exists.
 **Done means:** one recorded dry-run session per house, the `onTrace` output
 pasted into `specs/04-live.md`, and any shape correction the real response
 forced. Until then the honest claim is "typed and tested", not "working".
-
-### 3. `execute.ts` verified against the real router ABI before anyone unsets `DRY_RUN`
-
-The dry-run path prints the exact call it would send. Nobody has checked that
-call against the deployed Pons router ABI on chain 4663. `DRY_RUN=0` is one
-environment variable away from being someone's real money.
-
-**Done means:** the ABI is read from chain, the encoded calldata for a known
-swap is asserted in a test, and the README says plainly which router address
-was verified and when.
 
 ### 4. Latency measured per house, never assumed
 
