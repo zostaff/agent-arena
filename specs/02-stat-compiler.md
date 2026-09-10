@@ -25,8 +25,8 @@ trusts its caller either.
 ## Three houses, three ladders
 
 An agent is wired to one **provider** — Anthropic, OpenAI or xAI — and trains
-inside that house's ladder. `MODEL_LADDERS` in `config.ts` is the only table
-that has to change when a vendor re-prices or ships a new frontier model.
+inside that house's ladder. `MODEL_LADDERS` in `config.ts` owns model selection; `MODEL_PRICING` owns
+prices. Update the corresponding tables when either changes.
 
 ```ts
 const MODEL_LADDERS = {
@@ -40,7 +40,7 @@ const MODEL_LADDERS = {
 *reasoning budget* on the house's working model; at 12 the frontier rung opens
 and the bill jumps. The house is chosen in FORGE at build time and changed
 later with REWIRE (`village.rewire`, 60 coins, refused while a position is
-open — the verdict that opened it came from the old house).
+open or a decision is pending).
 
 The provider changes exactly three things: **the model id on the wire, the
 price of every decision, and which parameters the request may legally carry**.
@@ -139,3 +139,15 @@ genuinely changes what a request costs).
 | PTN → `thinkingBudget` | 0 | 512 | 3000 | 3000 |
 | PTN → model | opus-5 | opus-5 | fable-5-1 | fable-5-1 |
 | GAS → `slippageBps` | 160 | 97 | 52 | 30 |
+
+## Acceptance and tasks
+
+Owner: `core/config.ts`. These formulas are requirements for every mode;
+network observations and UI state must never become compiler inputs.
+
+- [x] Stat boundaries and boost overrides: `config.test.ts`.
+- [x] Manual billing calculations: `cost.test.ts`.
+- [x] Every model rung priced and house-independent non-price config: `providers.test.ts`.
+- [ ] Reverify vendor models/prices before changing the pinned tables. The
+  dated readings above were not independently rechecked during this refactor.
+- [ ] Roadmap 4 latency measurements stay outside this compiler.

@@ -1,25 +1,18 @@
 /**
  * DEGEN VILLAGE — the app shell.
  *
- * The browser runs the sim market and the heuristic brain: deterministic, free,
- * and safe to leave open. Live mode is `MODE=live npm run live` from node,
+ * The browser runs SIM, CHAIN or real-quote PAPER with a free heuristic brain. Live mode is `MODE=live npm run live` from node,
  * where the API key stays on the machine instead of in a bundle.
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   REWIRE_COST,
-  Village,
   type BuildingId,
   type VillageView,
 } from "../core/village.js";
 import type { BoostKind } from "../core/config.js";
 import type { Provider } from "../core/types.js";
-import { SimMarket } from "../sim/market.js";
-import { PaperMarket } from "../paper/market.js";
-import type { ChainStatus } from "./Dex.jsx";
-import { heuristicBrain } from "../sim/brain.js";
-import { mulberry32 } from "../sim/rng.js";
 import { VillageScene } from "./Village.jsx";
 import {
   AgentInspector,
@@ -30,7 +23,8 @@ import {
   StatCards,
 } from "./Hud.jsx";
 import { DexOverlay } from "./Dex.jsx";
-import { EMPTY_DRAFT, Forge, type ForgeDraft } from "./Forge.jsx";
+import { Forge } from "./Forge.jsx";
+import { EMPTY_DRAFT, parseBuild, type ForgeDraft } from "../core/build.js";
 import { BoardPanel } from "./Board.jsx";
 import {
   loadBoard,
@@ -45,103 +39,18 @@ import {
   type BuildEntry,
   type Me,
 } from "./storage.js";
+import { useMarketSession, storedMode, MODE_KEY, type MarketMode } from "./useMarketSession.js";
 import type { BacktestComparison } from "../sim/backtest.js";
 
-const SESSION_SEED = 42;
 
 /** Ticks between autosaves. At 2x speed that is roughly every four seconds. */
 const AUTOSAVE_EVERY_TICKS = 240;
 
 type Overlay = "NONE" | "DEX" | "FORGE" | "BOARD";
 
-/**
- * SIM is the seeded world that always works offline. PAPER trades the tokens
- * actually launching on Robinhood Chain right now — identity read from the
- * free public RPC, prices still simulated, nothing signed. The mode is
- * remembered per browser.
- */
-export type MarketMode = "SIM" | "PAPER";
-const MODE_KEY = "dv_mode";
-
-function storedMode(): MarketMode {
-  try {
-    return globalThis.localStorage?.getItem(MODE_KEY) === "PAPER" ? "PAPER" : "SIM";
-  } catch {
-    return "SIM";
-  }
-}
-
 export function App(): React.ReactElement {
-  const [mode, setMode] = useState<MarketMode>(storedMode);
-  const [chain, setChain] = useState<ChainStatus>({ state: "off" });
-
-  const { village, paper } = useMemo(() => {
-    if (mode === "PAPER") {
-      const market = new PaperMarket({ universe: 6 });
-      const v = new Village({
-        market,
-        brain: heuristicBrain(),
-        rng: mulberry32(SESSION_SEED ^ 0x9e3779b9),
-        blockingDecisions: true,
-        onTick: () => market.advance(1),
-      });
-      return { village: v, paper: market };
-    }
-    const market = new SimMarket({ seed: SESSION_SEED });
-    const v = new Village({
-      market,
-      brain: heuristicBrain(),
-      rng: mulberry32(SESSION_SEED ^ 0x9e3779b9),
-      blockingDecisions: true,
-      onTick: () => market.advance(1),
-    });
-    return { village: v, paper: null };
-  }, [mode]);
-
-  /* Reading the chain is the one thing here that can fail on someone else's
-     network, so it reports its own state instead of silently doing nothing. */
-  useEffect(() => {
-    if (!paper) {
-      setChain({ state: "off" });
-      return;
-    }
-    let alive = true;
-    setChain({ state: "connecting", endpoint: paper.endpoint });
-    void (async () => {
-      try {
-        const { chainId, head, ok } = await paper.verify();
-        const tokens = await paper.refresh();
-        if (!alive) return;
-        setChain({
-          state: ok ? "live" : "wrong-chain",
-          endpoint: paper.endpoint,
-          chainId,
-          head,
-          tokens,
-          readAt: Date.now(),
-        });
-      } catch (err) {
-        if (!alive) return;
-        setChain({
-          state: "error",
-          endpoint: paper.endpoint,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
-    })();
-    const timer = setInterval(() => {
-      void paper
-        .refresh()
-        .then((tokens) => {
-          if (alive) setChain((c) => ({ ...c, tokens, readAt: Date.now() }));
-        })
-        .catch(() => undefined);
-    }, 30_000);
-    return () => {
-      alive = false;
-      clearInterval(timer);
-    };
-  }, [paper]);
+  const [mode] = useState<MarketMode>(storedMode);
+  const { village, chain, feed } = useMarketSession(mode);
 
   const onMode = useCallback((next: MarketMode) => {
     try {
@@ -150,7 +59,9 @@ export function App(): React.ReactElement {
       /* a browser that refuses storage still gets to switch, just not to
          remember — the mode is not worth failing over. */
     }
-    setMode(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("mode", next);
+    window.location.assign(url.href);
   }, []);
 
   const [view, setView] = useState<VillageView>(() => village.view());
@@ -177,15 +88,16 @@ export function App(): React.ReactElement {
 
   const speedRef = useRef(speed);
   const pausedRef = useRef(paused);
-  speedRef.current = speed;
+  speedRef.current = mode === "PAPER" ? 1 : speed;
   pausedRef.current = paused;
 
   /* Restore before the first tick, so a reload resumes rather than restarts.
      A save that fails validation is ignored and the fresh village stands. */
   useEffect(() => {
+    if (mode === "PAPER") { setBooted(true); return; }
     void (async () => {
       try {
-        const raw = await loadVillageSave();
+        const raw = await loadVillageSave(mode);
         if (raw && village.restore(raw)) {
           setView(village.view());
           setSelectedAgent(village.agents[0]?.id ?? null);
@@ -208,11 +120,12 @@ export function App(): React.ReactElement {
       if (!pausedRef.current) {
         for (let i = 0; i < speedRef.current; i++) await village.step();
       }
+      if (!alive) return;
       frame += 1;
       if (frame % 2 === 0) setView(village.view());
-      if (!wipingRef.current && village.tick - lastSaveTick >= AUTOSAVE_EVERY_TICKS) {
+      if (mode !== "PAPER" && !wipingRef.current && village.tick - lastSaveTick >= AUTOSAVE_EVERY_TICKS) {
         lastSaveTick = village.tick;
-        void saveVillage(village.save());
+        void saveVillage(village.save(), mode);
       }
       handle = requestAnimationFrame(() => void loop());
     };
@@ -227,8 +140,8 @@ export function App(): React.ReactElement {
   useEffect(() => {
     if (!booted) return;
     const flush = (): void => {
-      if (wipingRef.current) return;
-      void saveVillage(village.save());
+      if (wipingRef.current || mode === "PAPER") return;
+      void saveVillage(village.save(), mode);
     };
     window.addEventListener("pagehide", flush);
     document.addEventListener("visibilitychange", flush);
@@ -358,15 +271,14 @@ export function App(): React.ReactElement {
   }, [village, me, villageId, flash]);
 
   const onLoadBuild = useCallback((e: BuildEntry) => {
-    setDraft({
-      name: e.name,
-      stats: e.stats,
-      strategy: e.strategy,
-      systemSuffix: e.systemSuffix,
-      provider: e.provider ?? "anthropic",
-    });
+    const parsed = parseBuild(e);
+    if (!parsed.ok) {
+      flash(parsed.error);
+      return;
+    }
+    setDraft(parsed.draft);
     setOverlay("FORGE");
-  }, []);
+  }, [flash]);
 
   /* REWIRE: the same house choice the FORGE offers, but on a live agent and
      for coins. Refused mid-position — see Village.rewire. */
@@ -376,7 +288,7 @@ export function App(): React.ReactElement {
         setView(village.view());
         flash(`rewired to ${provider}`);
       } else {
-        flash(`rewire failed — needs ${REWIRE_COST} coins and no open position`);
+        flash(`rewire failed — needs ${REWIRE_COST} coins, no position or pending decision`);
       }
     },
     [village, flash],
@@ -393,7 +305,7 @@ export function App(): React.ReactElement {
     setResetArmed(false);
     wipingRef.current = true;
     void (async () => {
-      await clearVillageSave();
+      if (mode !== "PAPER") await clearVillageSave(mode);
       window.location.reload();
     })();
   }, [resetArmed]);
@@ -407,7 +319,7 @@ export function App(): React.ReactElement {
         <div className="dv-brand">
           <span className="dv-brand-mark">◆</span>
           <span className="dv-brand-name">DEGEN VILLAGE</span>
-          <span className="dv-brand-sub">agent-arena · robinhood chain</span>
+          <span className="dv-brand-sub">agent-arena · paper trading</span>
         </div>
         <StatCards view={view} rank={myRank} />
         <div className="dv-top-actions">
@@ -421,7 +333,7 @@ export function App(): React.ReactElement {
             BOARD
           </button>
           <div className="dv-mode">
-            {(["SIM", "PAPER"] as const).map((m) => (
+            {(["SIM", "CHAIN", "PAPER"] as const).map((m) => (
               <button
                 key={m}
                 className={`dv-btn dv-btn-tiny${mode === m ? " dv-mode-on" : ""}`}
@@ -429,14 +341,15 @@ export function App(): React.ReactElement {
                 title={
                   m === "SIM"
                     ? "seeded offline world"
-                    : "tokens launching on Robinhood Chain right now — prices still simulated"
+                    : m === "PAPER" ? "real Coinbase quotes, 10 virtual ETH, heuristic bots"
+                    : "real chain identities, simulated prices"
                 }
               >
                 {m}
               </button>
             ))}
           </div>
-          <button className="dv-btn dv-btn-primary" onClick={() => void onPublishVillage()}>
+          <button className="dv-btn dv-btn-primary" disabled={mode === "PAPER"} title={mode === "PAPER" ? "Paper rankings need server verification" : "Save village score"} onClick={() => void onPublishVillage()}>
             PUBLISH
           </button>
           <button
@@ -448,6 +361,13 @@ export function App(): React.ReactElement {
           </button>
         </div>
       </header>
+      <div className="dv-save-note" role="status">
+        {mode === "PAPER" ? <>
+          PAPER · {feed.state}: {feed.message} · cash {(view.paperCashEth ?? 10).toFixed(4)} / initial 10 virtual ETH
+          · fee assumption 0.60% per side · heuristic bots · model costs are estimates, no API billing
+          · session resets on reload · quotes use real time
+        </> : <>Progress saved in this browser · no cloud sync · {mode === "CHAIN" ? "real token identities, simulated prices" : "offline simulation"}</>}
+      </div>
 
       <main className="dv-main">
         <VillageScene
@@ -478,10 +398,11 @@ export function App(): React.ReactElement {
         <div className="dv-bottom-right">
           <RivalStandings entries={board.villages} meId={villageId} />
           <SpeedControls
-            speed={speed}
+            speed={mode === "PAPER" ? 1 : speed}
             paused={paused}
+            fixedSpeed={mode === "PAPER"}
             onSpeed={(s) => {
-              setSpeed(s);
+              if (mode !== "PAPER") setSpeed(s);
               setPaused(false);
             }}
             onPause={() => setPaused((p) => !p)}

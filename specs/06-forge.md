@@ -73,3 +73,34 @@ after the bill does not get to say BETTER.
 * **DEPLOY** — 150 coins, max 4 custom agents. The deployed agent starts at
   zero stats with the authored allocation as its *target*, so it trains toward
   the build rather than being handed it.
+
+## Build contract and JSON import
+
+`core/build.ts` owns `ForgeDraft`, `CustomAgentSpec`, `parseBuild`,
+`parseBuildJson`, `statsSpent` and `STRATEGY_LIMITS`. React renders these
+limits; it does not define a second schema. `ForgeWidgets.tsx` contains the
+stateless controls/chart, and `BuildImport.tsx` owns the paste form.
+
+EXPORT includes `version: 1`. IMPORT also accepts legacy exports without a
+version. It validates the envelope, requires integer stats in 0–15 whose sum
+is at most 20, validates strategy ranges and `holdMin <= holdMax`, and requires
+a boolean book-alignment flag. Name length is 1–16; suffix length is at most
+4000 characters; pasted JSON is at most 65,536 characters. Unknown providers
+fall back to Anthropic. Errors are shown without replacing the current draft.
+
+Only authored fields are copied. Imported `compiled` and `backtest` fields
+are ignored. The config is recomputed and publishing requires a new backtest.
+Results are keyed to the exact draft that launched them, so importing or editing
+while a backtest runs cannot attach an old result to the new draft.
+
+The same parser protects board LOAD and `Village.deployCustom`; invalid
+builds cannot spend treasury or bypass the budget through another entry point.
+
+## Acceptance and tasks
+
+- [x] Roadmap 5: paste, validate and load an exported build.
+- [x] Current/legacy exports, invalid inputs, unknown houses, ranges, budget,
+  ignored performance claims and atomic deployment refusal: `build.test.ts`.
+- [x] Existing deterministic backtests and cross-house pricing remain green.
+- [ ] Browser QA: malformed paste preserves draft; valid paste changes preview;
+  IMPORT while RUNNING cannot publish a stale result; EXPORT can be reimported.

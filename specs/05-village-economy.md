@@ -1,4 +1,7 @@
-# 05 — Village economy (`src/core/village.ts`)
+# 05 — Village economy
+
+Definitions and prices live in `src/core/economy.ts`; state mutations and tick
+orchestration live in `src/core/village.ts`.
 
 14x14 grid. Terminal at the centre `(6.5, 6.5)`.
 
@@ -62,7 +65,7 @@ with a dashed ring.
 **REWIRE** — `village.rewire(agentId, provider)` moves one agent to another
 house for **60 coins** (`REWIRE_COST`). Refused when: the agent is unknown, it
 is already on that house, it holds an open position (the verdict that opened it
-came from the old house), or the treasury is short. Stats do not move with it —
+came from the old house), a decision is pending, or the treasury is short. Stats do not move with it —
 PTN 12 on Anthropic is PTN 12 on xAI, it simply costs a different amount per
 decision. See `02-stat-compiler.md` for the ladders and the bill.
 
@@ -81,32 +84,8 @@ Manhattan path — x axis first, then y, which reads cleanly in isometric space.
 
 ## Save and restore
 
-`village.save()` returns a `VillageSave`; `village.restore(unknown)` rebuilds
-from one and **returns false without touching anything** if the blob is not a
-save it recognises. `SAVE_VERSION` is refused rather than migrated.
-
-| Survives | Does not survive |
-|---|---|
-| tick, treasury, total spend | open positions |
-| building levels and running jobs | unrealised P&L |
-| active boosts and their remaining ticks | walk position, current state, training timer |
-| every agent: stats, level, XP, house, strategy, target stats, record | notifications, tape, cached snapshots |
-
-**Open positions are dropped on purpose.** A position is priced against a
-market that no longer exists after a reload, so carrying one over would mean
-inventing its P&L. The trade never closed, so it never counted. Agents resume
-at REST at home; that is cosmetic, since the config they compile on the next
-tick is identical.
-
-`parseSave` treats a save the way `parseVerdict` treats a model: as data from
-anywhere. Every number is coerced and clamped, every id checked against the set
-the engine knows, unknown buildings and boosts dropped, expired boosts dropped,
-stats run through `normalizeStats`. A save with no usable agent is refused.
-
-The UI autosaves every 240 ticks and flushes on `pagehide` and
-`visibilitychange`. RESET is two clicks and sets a latch first — without it the
-reload that follows the wipe fires `pagehide` and writes the village straight
-back, which is exactly the bug the browser test caught on 2026-09-07.
+The save schema, parser, storage adapter and lifecycle requirements have their
+own owner in [spec 13 — Persistence](13-persistence.md).
 
 ## Fills
 
@@ -122,3 +101,13 @@ back, which is exactly the bug the browser test caught on 2026-09-07.
 before the next tick begins. Sim and backtest set it; live does not. The agent
 consumes its verdict on the following step, so `DECIDE` lasts exactly one tick
 and is visible in the UI.
+
+## Acceptance and tasks
+
+- [x] Building, RUSH, boost and treasury rules: `village.test.ts`.
+- [x] Deployment validates the authored build before deducting coins:
+  `build.test.ts`. Trained save stats use a separate parser.
+- [x] House-preserving fill history: `tape.test.ts`.
+- [x] Module extraction preserves the seeded simulation and save format.
+- [ ] Further economy changes must state their effect on published backtests
+  and update the owning formula or version deliberately.

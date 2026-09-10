@@ -9,7 +9,8 @@ import { PALETTE } from "./theme.js";
 import { Building, BuildingGradients } from "./Building.jsx";
 import { Terminal, TerminalGradients } from "./Terminal.jsx";
 import { AgentSprite } from "./AgentSprite.jsx";
-import { BUILDING_DEFS, TERMINAL_POS, type BuildingId, type VillageView } from "../core/village.js";
+import { BUILDING_DEFS, TERMINAL_POS, type BuildingId } from "../core/economy.js";
+import type { VillageView } from "../core/village.js";
 
 export interface VillageSceneProps {
   view: VillageView;

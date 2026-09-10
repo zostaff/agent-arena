@@ -24,8 +24,8 @@ import {
   CUSTOM_DEPLOY_COST,
   REWIRE_COST,
   type BuildingId,
-  type VillageView,
-} from "../core/village.js";
+} from "../core/economy.js";
+import type { VillageView } from "../core/village.js";
 import type { Provider } from "../core/types.js";
 import type { VillageEntry } from "./storage.js";
 
@@ -35,7 +35,8 @@ export interface StatCardsProps {
 }
 
 export function StatCards({ view, rank }: StatCardsProps): React.ReactElement {
-  const net = view.netPnlEth;
+  const paper = view.paperCashEth !== undefined;
+  const net = view.paperPnlEth ?? view.netPnlEth;
   return (
     <div className="dv-cards">
       <div className="dv-card">
@@ -44,11 +45,11 @@ export function StatCards({ view, rank }: StatCardsProps): React.ReactElement {
         <div className="dv-card-sub">+{view.passiveYield.toFixed(3)}/tick · cut {(view.cutRate * 100).toFixed(0)}%</div>
       </div>
       <div className="dv-card">
-        <div className="dv-card-label">NET P&amp;L</div>
+        <div className="dv-card-label">{paper ? "PAPER P&L" : "NET P&L"}</div>
         <div className="dv-card-value" style={{ color: net >= 0 ? PALETTE.up : PALETTE.down }}>
           {fmtEth(net)} ETH
         </div>
-        <div className="dv-card-sub">burned {fmtUsd(view.totalSpentUsd)} on inference</div>
+        <div className="dv-card-sub">{paper ? "after trading fees · no API charges" : `estimated ${fmtUsd(view.totalSpentUsd)} on inference`}</div>
       </div>
       <div className="dv-card">
         <div className="dv-card-label">ROSTER</div>
@@ -93,8 +94,8 @@ export function BoostTimers({
           <button
             key={d.kind}
             className="dv-btn dv-btn-boost"
-            disabled={view.treasury < d.cost}
-            title={d.effect}
+            disabled={view.treasury < d.cost || (view.paperCashEth !== undefined && d.kind === "zeroGas")}
+            title={view.paperCashEth !== undefined && d.kind === "zeroGas" ? "Paper fees are fixed for this session" : d.effect}
             onClick={() => onBuy(d.kind)}
           >
             {d.label} <span>{d.cost}</span>
@@ -138,7 +139,9 @@ export function SpeedControls({
   paused,
   onSpeed,
   onPause,
+  fixedSpeed = false,
 }: {
+  fixedSpeed?: boolean;
   speed: number;
   paused: boolean;
   onSpeed(v: number): void;
@@ -153,6 +156,7 @@ export function SpeedControls({
         <button
           key={s}
           className={`dv-btn${speed === s && !paused ? " dv-btn-on" : ""}`}
+          disabled={fixedSpeed && s !== 1}
           onClick={() => onSpeed(s)}
         >
           {s}x
@@ -200,7 +204,7 @@ export function AgentInspector({
   const color = CLASS_COLOR[agent.cls];
   const house = PROVIDER_META[cfg.provider];
   /* An agent holding a position keeps the house that opened it. */
-  const canRewire = agent.position === null && view.treasury >= REWIRE_COST;
+  const canRewire = agent.position === null && agent.state !== "DECIDE" && view.treasury >= REWIRE_COST;
 
   return (
     <div className="dv-panel dv-inspector">
@@ -227,7 +231,7 @@ export function AgentInspector({
         <Row k="thinkingBudget" v={`${cfg.thinkingBudget} (effort ${cfg.effort})`} />
         <Row k="positionSizeEth" v={cfg.positionSizeEth.toFixed(4)} />
         <Row k="slippageBps" v={String(cfg.slippageBps)} />
-        <Row k="feeBps" v={String(cfg.feeBps)} />
+        <Row k={view.paperFeeBps !== undefined ? "paper feeBps" : "feeBps"} v={String(view.paperFeeBps ?? cfg.feeBps)} />
         <Row k="costPerDecision" v={fmtUsd(cfg.costPerDecision)} />
       </div>
 
@@ -255,7 +259,9 @@ export function AgentInspector({
           <div className="dv-house-note">
             {agent.position
               ? "holding a position — rewire after it settles"
-              : `${modelForPtn(agent.stats.ptn, cfg.provider)} at PTN ${agent.stats.ptn}`}
+              : agent.state === "DECIDE"
+                ? "decision pending — rewire after it completes"
+                : `${modelForPtn(agent.stats.ptn, cfg.provider)} at PTN ${agent.stats.ptn}`}
           </div>
         </div>
       )}
@@ -266,9 +272,9 @@ export function AgentInspector({
         <Row k="unrealized" v={`${fmtEth(agent.unrealizedPnlEth)} ETH`} />
         <Row k="trades / wins" v={`${agent.trades} / ${agent.wins}`} />
         <Row k="decisions / skips" v={`${agent.decisions} / ${agent.skips}`} />
-        <Row k="inference spend" v={fmtUsd(agent.spentUsd)} />
+        <Row k="estimated inference" v={fmtUsd(agent.spentUsd)} />
         <Row
-          k="net of inference"
+          k="net after estimated inference"
           v={`${fmtEth(agent.realizedPnlEth + agent.unrealizedPnlEth - usdToEth(agent.spentUsd))} ETH`}
           accent
         />

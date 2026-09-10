@@ -1,9 +1,12 @@
 # 09 — Tests (`tests/`, vitest)
 
-`npm test` — 162 tests, ~1s.
+`npm test` — 206 tests, ~1s.
 
 | File | Covers |
 |---|---|
+| `architecture.test.ts` | all core imports stay inside core; leaf domains never depend on the village orchestrator |
+| `build.test.ts` | versioned/legacy imports, malformed JSON, finite ranges, total budget, unknown provider fallback, ignored claimed results, copied fields, deployment refusal without mutation |
+| `tape.test.ts` | BUY/SELL house attribution survives REWIRE; REWIRE refuses a pending verdict |
 | `config.test.ts` | stat compiler boundaries (0 / 7 / 12 / 15 per stat), model ladder, thinking budget rungs, effort mapping, clamping, all four boosts |
 | `cost.test.ts` | `costPerDecision` against the manual calculation at PTN 0 and PTN 12, monotonicity, ALPHA FEED repricing, `maxTokens` |
 | `brain.test.ts` | verdict clamping after parse, fence stripping, SELL→SKIP with no position, SKIP on parse failure / bad status / timeout / transport error / empty content / refusal / missing key, 429 retry, pinned headers and endpoint, `system` kept out of `messages`, no `temperature` on Opus 5 and Fable 5.1, no `budget_tokens` |
@@ -43,3 +46,38 @@
 Retuning `src/sim/market.ts` invalidates every published backtest on the BUILDS
 board — the seed still replays, but it replays a different world. Bump
 `BOARD_KEY` (`dv_board_v1` → `dv_board_v2`) when that happens.
+
+## Completion gate
+
+Run from the repository root:
+
+```bash
+npm run typecheck
+npm test
+npm run build
+```
+
+No network or provider keys are needed. Start with the relevant test files;
+run the full gate after changes settle. CI uses the same commands. A green
+fixture suite does not verify live providers, on-chain execution or UI layout.
+
+## Acceptance and tasks
+
+- [x] Baseline before refactoring: 162 tests and typecheck passed.
+- [x] After refactoring and roadmap additions: 206 tests across 13 files.
+- [x] Typecheck, production build and `git diff --check` pass on 2026-09-08.
+- [x] Architecture and hostile build input have dedicated regression coverage.
+- [ ] Browser smoke test remains pending: the native automation connection
+  closed before a page could be inspected. No screenshot was verified.
+- [ ] Live acceptance evidence remains in specs 04 and 11, separate from CI.
+
+## Paper alpha validation · 2026-09-10
+
+223 tests across 14 files pass. `tests/paper.test.ts` covers external-data
+validation, coalescing/backoff, freshness, native ETH depth, strict fill arithmetic,
+fees/cash and outage recovery with exactly-once settlement. Core boundary tests
+include `paper.ts`. Typecheck and production build pass.
+
+Read-only CLI smoke: 120 ticks, all three Coinbase products fresh, feed `live`,
+no entry signal and therefore no fills. Chrome loaded the app; detailed PAPER
+browser QA was interrupted by the automation timeout and is still required.

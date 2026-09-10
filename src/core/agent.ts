@@ -31,6 +31,7 @@ export interface GridPos {
 
 export interface OpenPosition {
   pair: string;
+  provider?: Provider;
   entryPrice: number;
   sizeEth: number;
   /** Token units bought, used to mark the position to market. */
@@ -170,6 +171,7 @@ export class VillageAgent {
   verdict: Verdict | null = null;
   /** Set by the village when a decision resolves; consumed in DECIDE. */
   pendingVerdict: Verdict | null = null;
+  verdictProvider: Provider | null = null;
 
   position: OpenPosition | null = null;
   lastPair: string | null = null;
@@ -385,6 +387,7 @@ export class VillageAgent {
       case "SETTLE": {
         const before = this.realizedPnlEth;
         ctx.closePosition(this);
+        if (this.position) break; // Retry after feed/depth recovery.
         const delta = this.realizedPnlEth - before;
         if (delta !== 0) {
           this.trades += 1;

@@ -7,6 +7,7 @@ import React from "react";
 import { PALETTE, CLASS_COLOR, fmtEth } from "./theme.js";
 import type { Candle, Snapshot } from "../core/types.js";
 import type { VillageView } from "../core/village.js";
+import { PROVIDER_META } from "../core/config.js";
 
 const W = 520;
 const H = 210;
@@ -183,7 +184,7 @@ export function DexOverlay({ view, pair, onPair, chain, onClose }: DexOverlayPro
   return (
     <div className="dv-dex">
       <div className="dv-dex-head">
-        <span className="dv-dex-title">RH·CHAIN DEX</span>
+        <span className="dv-dex-title">PAPER MARKET</span>
         <div className="dv-dex-pairs">
           {entries.map((e) => (
             <button
@@ -204,10 +205,10 @@ export function DexOverlay({ view, pair, onPair, chain, onClose }: DexOverlayPro
         <>
           <div className="dv-dex-meta">
             <span>last {active.snap.last.toPrecision(6)}</span>
-            <span>age {active.snap.ageMinutes.toFixed(0)}m</span>
-            <span>buyers {active.snap.uniqueBuyers}</span>
+            <span>{active.snap.provenance?.identity === "exchange" ? "ETH quotes · exchange metadata: age/buyers/curve/reserve N/A" : `age ${active.snap.ageMinutes.toFixed(0)}m`}</span>
+            {active.snap.provenance?.identity !== "exchange" && <><span>buyers {active.snap.uniqueBuyers}</span>
             <span>curve {active.snap.curveProgressPct.toFixed(1)}%</span>
-            <span>reserve {active.snap.reserveEth.toFixed(2)} ETH</span>
+            <span>reserve {active.snap.reserveEth.toFixed(2)} ETH</span></>}
             {active.snap.tokenAddress && (
               <span className="dv-chain-tag" title={active.snap.tokenAddress}>
                 {active.snap.tokenAddress.slice(0, 6)}…{active.snap.tokenAddress.slice(-4)}
@@ -219,6 +220,7 @@ export function DexOverlay({ view, pair, onPair, chain, onClose }: DexOverlayPro
               identity <b>{active.snap.provenance.identity}</b> · price{" "}
               <b>{active.snap.provenance.price}</b> · book{" "}
               <b>{active.snap.provenance.book}</b> · fills <b>paper</b>
+              {active.snap.validUntil && <span> · {Date.now() >= active.snap.validUntil ? "STALE — fills paused" : "fresh"} · book midpoint · 1-minute trade candles</span>}
             </div>
           )}
           <div className="dv-dex-body">
@@ -259,6 +261,7 @@ export function DexOverlay({ view, pair, onPair, chain, onClose }: DexOverlayPro
             <div className="dv-tape-row" key={t.id}>
               <span className={`dv-tag dv-tag-${t.action.toLowerCase()}`}>{t.action}</span>
               <span style={{ color: CLASS_COLOR[t.cls] }}>{t.agentName}</span>
+              <span style={{ color: PROVIDER_META[t.provider].color }}>{PROVIDER_META[t.provider].label}</span>
               <span>{t.pair}</span>
               <span>{t.sizeEth.toFixed(3)}</span>
               <span style={{ color: t.pnlEth >= 0 ? PALETTE.up : PALETTE.down }}>

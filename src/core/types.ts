@@ -41,14 +41,14 @@ export interface BookLevel {
 
 /**
  * Where each field of a snapshot came from. `chain` means it was read from
- * Robinhood Chain; `sim` means the engine produced it. Never blurred: a paper
- * session shows real tokens with simulated prices, and the UI says which is
- * which rather than letting the player assume.
+ * Robinhood Chain; `exchange` means public exchange data; `sim` means
+ * generated data. CHAIN mixes real identities and simulated prices, while
+ * PAPER uses exchange prices. The UI labels the provenance explicitly.
  */
 export interface SnapshotProvenance {
-  identity: "chain" | "sim";
-  price: "chain" | "sim";
-  book: "chain" | "sim";
+  identity: "chain" | "exchange" | "sim";
+  price: "chain" | "exchange" | "sim";
+  book: "chain" | "exchange" | "sim";
 }
 
 export interface Snapshot {
@@ -65,6 +65,9 @@ export interface Snapshot {
   provenance?: SnapshotProvenance;
   /** ERC-20 address when the pair is a real token. */
   tokenAddress?: string;
+  /** Exchange book timestamp and hard execution expiry, epoch milliseconds. */
+  observedAt?: number;
+  validUntil?: number;
 }
 
 export interface Market {

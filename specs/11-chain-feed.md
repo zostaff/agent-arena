@@ -8,8 +8,8 @@ rpc        https://rpc.mainnet.chain.robinhood.com   (free, rate limited, CORS *
 explorer   Blockscout
 ```
 
-`npm run chain` prints exactly what the endpoint returns — it is the only
-thing in the repo that touches the network on purpose, and the check that keeps
+`npm run chain` prints exactly what the endpoint returns — it is a read-only
+network diagnostic (paper and live modes also use the network), and the check that keeps
 this file honest while the unit tests run on fixtures.
 
 ## What is read
@@ -58,3 +58,20 @@ what it found.
 * **`RpcError` is thrown, never swallowed** — but every caller in the UI turns
   it into a visible state (`connecting` / `live` / `error`), because a terminal
   that silently shows nothing when its feed is down is worse than no terminal.
+
+## Acceptance and remaining tasks
+
+Owner: `live/rpc.ts` owns JSON-RPC and decoding; `scripts/chain-probe.ts`
+reports observed evidence; `live/execute.ts` owns the signing refusal gate.
+
+- [x] ABI-string/bytes32 symbols, launch decoding, chain identity and selector
+  checks on fixtures: `chain.test.ts`.
+- [ ] Roadmap 2: collect buy and sell transaction hashes, input calldata,
+  destinations and receipts; verify argument meaning before changing execution.
+- [ ] Roadmap 7: pin PoolManager address and pool-id derivation with chain
+  evidence; decode swaps with token ordering/decimals; aggregate real OHLC.
+- [ ] Test log ordering, duplicate logs, empty intervals and reorganizations
+  before setting `Snapshot.provenance.price = "chain"`.
+
+No fresh chain evidence was collected during the module refactor. The current
+paper price label and the execution gate stay in place.

@@ -1,277 +1,163 @@
 <div align="center">
+<img src="assets/banner.png" alt="DEGEN VILLAGE — Agent Arena" width="100%">
 
-<img src="assets/banner.png" alt="DEGEN VILLAGE — an isometric village where AI agents train in buildings and trade memecoins" width="100%">
+**[Roadmap](ROADMAP.md) · [Specs](specs/README.md) · [Architecture](specs/12-architecture.md) · [Launch guide](docs/LAUNCH.md)**
 
-![tests](https://img.shields.io/badge/tests-162%20green-CCFF00?style=flat-square&labelColor=1C180D)
-![typescript](https://img.shields.io/badge/typescript-5.7-8fae00?style=flat-square&labelColor=1C180D)
-![houses](https://img.shields.io/badge/houses-anthropic%20·%20openai%20·%20xai-c7e26a?style=flat-square&labelColor=1C180D)
-![execution](https://img.shields.io/badge/execution-dry%20run%20by%20default-f87171?style=flat-square&labelColor=1C180D)
-![licence](https://img.shields.io/badge/licence-MIT-9a9578?style=flat-square&labelColor=1C180D)
 [![ci](https://github.com/zostaff/agent-arena/actions/workflows/ci.yml/badge.svg)](https://github.com/zostaff/agent-arena/actions/workflows/ci.yml)
 
-**[Roadmap](ROADMAP.md)** · **[Specs](specs/00-overview.md)** · **[Stat compiler](specs/02-stat-compiler.md)** · **[Live wires](specs/04-live.md)**
-
 </div>
 
-## What this is
+# Agent Arena / DEGEN VILLAGE
 
-An isometric village where AI agents train in buildings, walk to a terminal,
-and trade memecoins on the Pons bonding-curve DEX (Robinhood Chain).
+Build a trading agent in an isometric village, tune its strategy in FORGE,
+and watch it trade with virtual funds. Stats compile into actual engine
+parameters: polling cadence, context depth, size, slippage and model budget.
 
-**Every stat bar is a real config field the engine reads.** Fill the SPD bar and
-the agent's poll interval genuinely drops. Fill PTN and it genuinely reads more
-candles, thinks with a bigger budget, and at 12 changes model. The village is a
-config editor with a progress bar in front of it.
+## Try locally
 
-```bash
-npm install
-npm test        # 162 tests, ~1s
-npm run sim     # MODE=sim — seeded, deterministic, free
-npm run paper   # MODE=paper — real Robinhood Chain tokens, no keys at all
-npm run chain   # what the public RPC returns right now
-npm run dev     # the village in a browser
-```
-
-## Paper trading on real tokens — no keys
-
-`npm run paper`, or the **PAPER** switch in the header. The bots trade the
-tokens that are launching on Robinhood Chain *right now*, read straight from
-the free public RPC — no indexer, no API key, no wallet, nothing signed.
-
-```
-rpc      https://rpc.mainnet.chain.robinhood.com     chain 4663, CORS open
-launches eth_getLogs on the Pons factory, topic0 0x8d4aad49… = TokenLaunched
-symbol   ERC-20 symbol() by eth_call
-```
-
-A real read, on the day this was written: **173 launches in an eight-minute
-window**, tokens arriving seconds apart — `$SLOPNALD`, `$HORMUZ`, `$PERONA`,
-`$VLAD TENEV`.
-
-**What is real, and what is not — the DEX prints this on every snapshot:**
-
-| Field | Source |
-|---|---|
-| token address, symbol, age | **chain** |
-| price, candles, book, curve | **sim** — Pons v2 settles through Uniswap v4 and the swap decoding is not written yet |
-| fills, P&L | **paper** — nothing signed, no wallet, no transaction |
-
-A paper P&L on a real ticker is easy to mistake for a real one, so the label is
-the feature, not decoration. When the swap decoding lands, `price` flips to
-`chain` in one place and the label changes with it. Full contract:
-[specs/10-paper-trading.md](specs/10-paper-trading.md) ·
-[specs/11-chain-feed.md](specs/11-chain-feed.md).
-
-The village **never invents a ticker**: with no universe yet it skips the
-cycle rather than trading a placeholder.
-
-## Three houses
-
-Every agent is wired to **Anthropic**, **OpenAI** or **xAI** — chosen in the
-FORGE, changed later with REWIRE. Real vendor list prices, standard tier,
-checked 2026-09-06.
-
-| House | PTN 0 → PTN 12 | $/decision at PTN 0 | at PTN 12 | jump |
-|---|---|---|---|---|
-| **xAI** | `grok-4.3` → `grok-4.6` | $0.00184 | $0.02414 | 13.1x |
-| **Anthropic** | `claude-opus-5` → `claude-fable-5-1` | $0.01186 | $0.18668 | 15.7x |
-| **OpenAI** | `gpt-5.6-terra` → `gpt-6-astra` | $0.00534 | $0.18668 | 34.9x |
-
-A whole Grok 4.6 decision — frontier rung, 96 candles, 3000 reasoning tokens —
-costs less than a quarter of an Opus 5 decision at PTN 0. GPT-6 Astra and
-Fable 5.1 both bill $10/$50, so at the top they cost the same to the cent; the
-difference is what you paid on the way up.
-
-**The house changes exactly three things**: the model id on the wire, the price
-of every decision, and which parameters the request may legally carry. Poll
-interval, context depth, position size and slippage are identical across
-houses — a test asserts it field by field, so the choice can never quietly
-become a balance lever.
-
-| Where | What it does |
-|---|---|
-| **FORGE** | three buttons above the strategy sliders; the compiled-config preview reprices as you click, the backtest deliberately does not move |
-| **REWIRE** | 60 coins, in the agent inspector, mid-run — refused while a position is open, because the verdict that opened it came from the old house |
-| **`AGENT_PROVIDERS=xai,openai`** | wires the roster in order at boot in live mode, without touching code |
-
-Adding a fourth house is one entry in `MODEL_LADDERS`, one in `MODEL_PRICING`,
-one `WireAdapter`, and one line in the router.
-
-## The bill is subtracted
-
-A build that clears +0.02 ETH gross while burning $9 of GPT-6 Astra lost money.
-So the backtest reports **net of inference** beside gross, and the FORGE
-verdict and the BUILDS board both rank on net.
-
-```
-spentEth = spentUsd / ASSUMED_ETH_USD     # one assumed price, one constant
-netEth   = pnlEth - spentEth
-```
-
-The sim brain never reads a model id, so **gross is identical across houses,
-tick for tick** — a test compares the whole equity array to prove it. Only the
-bill moves. That is also why the FORGE can show what the same run would net on
-**all three houses from a single backtest**: the backtest agent is frozen, so
-`costPerDecision` is constant and the whole bill is `decisions × cost`.
-
-## The stat compiler
-
-```
-pollIntervalMs  = max(400, 3200 - spd * 260)
-ctxCandles      = min(120, 24 + ptn * 6)
-thinkingBudget  = ptn >= 12 ? 3000 : ptn >= 8 ? 1500 : ptn >= 4 ? 512 : 0
-positionSizeEth = base * (1 + rsk * 0.18) * (1 + level * 0.12)   clamp base * 8
-slippageBps     = max(30, 160 - gas * 9)
-```
-
-PTN buys context depth and reasoning budget, **not** a better model — until
-PTN 12, which unlocks the frontier rung of whichever house the agent is wired
-to. That trade-off is the LAB.
-
-## Architecture
-
-```
-                    ┌───────────────────────────┐
-                    │   src/core  (zero deps)   │
-                    │  config · agent · village │
-                    │  market helpers · brain   │
-                    └──────────┬────────────────┘
-        Market + Brain injected│
-              ┌────────────────┴────────────────┐
-              ▼                                 ▼
-   src/sim   SimMarket + heuristicBrain  src/live  PonsMarket + liveBrain
-   seeded · deterministic · free         Bitquery · viem · 3 houses
-                                         routed per agent by router.ts
-              │                                 │
-              └──────────► src/run.ts ◄─────────┘
-                         MODE=sim | MODE=live
-                                 │
-                            src/ui  React · SVG · canvas-free
-```
-
-`src/core` imports nothing at all. That is what lets the same engine run in
-node and in the browser, and what makes a 7000-tick backtest and a live session
-comparable.
-
-## Deviations from the original brief
-
-Forced by the vendors' current APIs — sending the brief's version returns a
-`400`. Full reasoning in [specs/04-live.md](specs/04-live.md).
-
-1. **`temperature: 0` is not sent** to `claude-opus-5` or `claude-fable-5-1`.
-   Sampling parameters were removed on that model family. Determinism here
-   comes from `src/sim`, which never calls a live brain.
-2. **`thinking.budget_tokens` is not sent.** Also rejected on both models. The
-   reasoning budget PTN buys is encoded as `output_config.effort`
-   (`0 → low`, `512 → medium`, `1500 → high`, `3000 → xhigh`) and still rides
-   on `max_tokens` as headroom. The number the village displays and prices is
-   unchanged.
-3. **OpenAI rejects sampling parameters too.** `temperature`, `top_p` and
-   `logprobs` were removed on `gpt-6-astra` and the GPT-5.6 family; the
-   Responses API carries the budget as `reasoning.effort`.
-
-**xAI is the one house where `temperature: 0` still works**, and it is still
-sent there — the determinism the brief asked for survives on exactly one of the
-three wires.
-
-## Running it for real
-
-The village is a static bundle: no server, no secrets in the build — live keys
-only ever exist in `MODE=live` on your own machine. So the browser build is
-published straight from CI.
-
-| Piece | What it does |
-|---|---|
-| `.github/workflows/ci.yml` | typecheck → tests → build on every push and PR |
-| `.github/workflows/pages.yml` | the same gate, then publishes `dist` to GitHub Pages |
-| `src/ui/ErrorBoundary.tsx` | a crash shows the message and offers to wipe the save, instead of a white screen |
-| autosave | every 240 ticks, plus a flush on `pagehide` and `visibilitychange` |
-
-**One-time step before the first publish:** Settings → Pages → *Build and
-deployment* → Source: **GitHub Actions**. The workflow asks
-`configure-pages` to enable Pages itself, but on this repository the Actions
-token is refused with `Resource not accessible by integration`, so the site has
-to be created once by hand. Every push after that publishes on its own.
-
-**Your village survives a reload.** Treasury, building levels, running jobs,
-boosts, and every agent's stats, level, XP, house and record come back.
-Open positions deliberately do not: a position is priced against a market that
-no longer exists after a reload, so carrying one over would mean inventing its
-P&L. RESET in the header wipes the save — two clicks, because it cannot be
-undone.
-
-A save is treated the way a model's answer is treated: as data from anywhere.
-`parseSave` coerces and clamps every number, checks every id against the set
-the engine knows, and refuses a save it does not recognise instead of guessing.
-
-## Safety rails
-
-* `decide()` **never throws**. Parse failure, bad status, timeout, transport
-  error, empty content, refusal, missing key — all resolve to `SKIP`.
-* `sizeEth` is clamped to `maxSizeEth` **after** parsing, every time, on every
-  house. The model is never trusted on size.
-* **Degrade-once.** A `400` body is *read*, not just counted: if it names a
-  parameter (`reasoning_effort`, `temperature`, `store`), the request is sent
-  again immediately without it, outside the retry budget. A silently dead house
-  is worse than a slightly slower one.
-* `execute.ts` defaults to `dryRun: true` and prints the exact call it would
-  have sent. `DRY_RUN=0` is the only way off — and even then a **selector
-  preflight** refuses to sign a call whose selector is not in the deployed
-  router's bytecode. Reading the real router on 2026-09-07 showed the ABI
-  pinned here since day one was wrong: `DRY_RUN=0` would have reverted on the
-  first trade. `npm run chain` prints the check.
-* A fill whose realised slippage exceeds the agent's `slippageBps` is refused,
-  not eaten.
-
-## Specs
-
-Written so a future session can pick up any part without re-reading the code.
-
-| Spec | Contents |
-|---|---|
-| [00 — Overview](specs/00-overview.md) | architecture, file map, reading order |
-| [01 — Core contracts](specs/01-core-contracts.md) | `Market`, `Brain`, `Snapshot`, `Verdict`, agent states, class lenses |
-| [02 — Stat compiler](specs/02-stat-compiler.md) | every formula, the three ladders, pricing, boosts, boundary table |
-| [03 — Sim](specs/03-sim.md) | mulberry32, the random walk and its tuning, heuristic brain, backtest, net-of-inference |
-| [04 — Live](specs/04-live.md) | all three wire contracts **and their forced deviations**, degrade-once, Bitquery queries, viem execution |
-| [05 — Village economy](specs/05-village-economy.md) | buildings, costs, times, RUSH, boosts, REWIRE, treasury, fills |
-| [06 — FORGE](specs/06-forge.md) | stat budget, house picker, strategy params, prompt suffix, backtest, deploy |
-| [07 — UI](specs/07-ui.md) | projection, SVG anatomy, HUD, REWIRE panel, DEX overlay, palette |
-| [08 — Multiplayer](specs/08-multiplayer.md) | `window.storage`, ranking on net, `BOARD_KEY` v2, load-a-rival's-build |
-| [09 — Tests](specs/09-tests.md) | what each file covers and which assertions are load-bearing |
-| [10 — Paper trading](specs/10-paper-trading.md) | the three modes, what is real and what is simulated, reproducibility |
-| [11 — Chain feed](specs/11-chain-feed.md) | the RPC, the pinned addresses, what is read and what is *not* claimed |
-
-## Environment
+Node.js 20+ (CI uses 22):
 
 ```bash
-cp .env.example .env
+npm ci
+npm run dev       # open http://localhost:5173
+npm test
+npm run build
+npm run paper     # real Coinbase quotes, virtual ETH, no keys
+TICKS=600 npm run paper  # bounded CLI session
+npm run paper:check      # 3-minute feed and virtual-ledger reconciliation
+npm run sim       # seeded offline market
+npm run paper:chain     # chain identities with simulated prices
+npm run chain     # read-only Robinhood Chain diagnostic
 ```
 
-| Variable | Used by |
+The UI has three explicit modes:
+
+| Mode | Identity / prices / book | Execution and decisions |
+|---|---|---|
+| SIM | Generated, seeded | Simulated fills; free heuristic |
+| PAPER | Coinbase SOL-ETH, LINK-ETH, ADA-ETH; real book and minute candles | 10 virtual ETH; free heuristic |
+| CHAIN | Robinhood Chain token identities; generated prices and book | Simulated fills; free heuristic |
+
+**PAPER uses real market observations, never real money.** There is no wallet,
+signing or exchange order submission. Historical trade candles and sampled book
+midpoints are labelled separately. ETH-quoted products preserve native ETH units.
+
+PAPER buys from asks and sells into bids, respects visible depth, cash and
+slippage, and assumes a **0.60% fee on each side**. Books expire after 15 seconds;
+invalid/empty/crossed/auction books are rejected. A failed refresh leaves an open
+position waiting for recovery instead of fabricating a closing price.
+
+This is a local alpha, not a verified trading competition. REST polling does not
+model matching-engine latency, queue priority or liquidity consumed by other
+players. Direct feed access depends on the user's network and region. Data
+errors are visible; there is no fallback to invented prices in PAPER.
+
+## What the bots do
+
+The free browser and paper CLI use a deterministic heuristic that reads the
+same strategy fields authored in FORGE. **They do not call GPT, Claude or Grok.**
+A house selects configuration and an estimated inference bill. Model ids, prices
+and API assertions in historical specs/config are provisional until revalidated;
+fixture tests are not evidence that a vendor currently serves a model.
+
+FORGE supports 20 stat points, strategy parameters, provider selection,
+backtesting, JSON export/import and deployment of custom agents. Imports and
+board LOAD share `core/build.ts`: finite ranges and budgets are enforced, unknown
+houses default to Anthropic, and imported performance claims are discarded.
+Publishing an imported build requires a fresh backtest.
+
+REWIRE is refused while a position or decision is pending. The tape records the
+house at fill time, so later rewiring cannot rewrite attribution.
+
+The simulated comparison reports gross and net of **estimated** model costs.
+That estimate uses a fixed ETH/USD assumption, not a real API bill. In PAPER,
+the primary P&L excludes hypothetical inference charges and cash is shown separately; game treasury coins are not
+trading collateral or blockchain tokens. The fixed paper fee overrides the
+village's simulated fee discounts.
+
+## Persistence and scores
+
+SIM and CHAIN progress save in separate browser slots. The validated save
+restores upgrades, jobs, roster and records; open positions are not restored.
+PAPER is a fresh, ephemeral session: cash, positions and P&L reset together on
+reload. Its results cannot be published to the village board.
+
+The current board is localStorage in a normal browser; an optional host-provided
+`window.storage` can share it. Neither path provides server-verified rankings.
+Production competitions need an authoritative server and event ledger.
+
+## Architecture and specifications
+
+```text
+src/core   contracts, stat compiler, agents, village orchestration
+           economy, save/build validation, strict virtual account
+src/sim    seeded market, heuristic decisions, reproducible backtests
+src/paper  Coinbase public data; legacy chain-identity simulated market
+src/live   provider adapters, chain RPC, Bitquery and guarded execution
+src/ui     React village, FORGE, DEX, storage, market session lifecycle
+src/run.ts CLI composition: sim / paper / chain-demo / live
+```
+
+Core imports only other core modules, enforced by an architecture test.
+`economy.ts`, `save.ts`, `build.ts` and `paper.ts` own separate domain contracts;
+`Village` orchestrates them. FORGE widgets/import and market-session lifecycle
+are separate UI modules. The [spec index](specs/README.md) assigns ownership,
+requirements, acceptance checks and remaining tasks to each subsystem.
+
+Typecheck, **226 tests across 15 files**, and production build pass locally on
+2026-09-11. Tests cover deterministic runs, hostile input, provider fixtures,
+virtual balance/depth/freshness, outage recovery and historical fill attribution.
+Published CI/deployment status is separate from these local checks.
+
+## Hosted demo and production work
+
+GitHub Pages workflow builds the static UI. First select **Settings → Pages →
+Source: GitHub Actions**, then run `pages` manually. Set repository Actions
+variable `PAGES_ENABLED=true` to deploy automatically on pushes to main. Without
+that opt-in, pushes run CI without a permanently failing Pages deployment.
+
+For public scale: shared market-data service, durable virtual accounts,
+server-verified scores, quotas, monitoring and a recovery/24-hour soak test.
+For real LLM decisions: server-only keys, actual vendor response checks and
+per-user inference budgets. See [spec 14](specs/14-public-paper-alpha.md) and the
+[launch guide](docs/LAUNCH.md).
+
+Real Pons prices require a verified Uniswap v4 swap decoder and pool mapping;
+the Coinbase adapter does not claim to provide that data. Funded execution also
+remains unfinished. `MODE=live` composes market/model adapters; it must not be
+presented as a working production order-routing system.
+
+## Environment and secrets
+
+`.env.example` documents server-side inputs. Export variables in your shell;
+CLI commands do not automatically load `.env`. SIM and PAPER need none.
+
+| Variables | Purpose |
 |---|---|
-| `ANTHROPIC_API_KEY` | `src/live/brain.ts` |
-| `OPENAI_API_KEY` | `src/live/providers.ts` — only if an agent is wired to OpenAI |
-| `XAI_API_KEY` | `src/live/providers.ts` — only if an agent is wired to xAI |
-| `AGENT_PROVIDERS` | `src/run.ts` — e.g. `xai,openai`; wires the roster in order |
-| `BITQUERY_TOKEN` | `src/live/pons.ts` |
-| `RH_RPC_URL`, `RH_PRIVATE_KEY`, `PONS_ROUTER` | `src/live/execute.ts` |
-| `DRY_RUN` | `src/live/execute.ts` — anything but `0` keeps it dry |
-| `MODE`, `SEED`, `TICKS` | `src/run.ts` — `sim` / `paper` / `live` |
-| `PAPER_PAIRS`, `PAPER_REFRESH_TICKS` | `src/run.ts` — paper universe size and re-read cadence |
+| `MODE`, `SEED`, `TICKS` | CLI mode and simulation/session controls |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `XAI_API_KEY` | Server-side provider adapters |
+| `AGENT_PROVIDERS` | Live roster house order, e.g. `xai,openai` |
+| `BITQUERY_TOKEN` | Legacy live market adapter |
+| `RH_RPC_URL`, `RH_PRIVATE_KEY`, `PONS_ROUTER`, `DRY_RUN` | Standalone execution adapter |
+| `PAPER_PAIRS`, `PAPER_REFRESH_TICKS` | Legacy chain-demo universe/refresh |
 
-## What is next
+Never put secrets in Git (public or private) or browser/Vite environment
+variables. The execution adapter defaults to dry run and its deployed-selector
+preflight refuses unsupported calls. This guard is not proof of a valid buy/sell
+integration. See [SECURITY.md](SECURITY.md).
 
-Everything planned, shipped and deliberately refused lives in
-**[ROADMAP.md](ROADMAP.md)** — including the honest note that the OpenAI and
-xAI wires are typed and tested but have not yet answered for real.
+## Development and token roadmap
 
-## Licence
+Keep the demo, core, contracts and tests public. Separate hosted operations and
+proprietary strategies into private repositories; credentials belong in a secret
+store. Visibility decisions and migration instructions are in
+[spec 15](specs/15-launch-and-visibility.md).
 
-MIT.
+A **development token** is now a roadmap item: product demand, utility and funding
+alternatives, economics, jurisdiction-specific review, testnet and independent
+audit precede a separate launch decision. No token is issued and the free paper
+demo does not require one. See [spec 16](specs/16-development-token.md).
 
----
+## License
 
-<div align="center">
-<sub><b>no autopilot · dry run by default · every bar is a field the engine reads</b></sub>
-</div>
+MIT. Making a repository private does not retract already distributed copies.

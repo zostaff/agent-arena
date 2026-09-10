@@ -79,3 +79,21 @@ REST ──▶ TRAIN ──▶ SCAN ──▶ DECIDE ──▶ HOLD ──▶ SE
 plus the FORGE system prompt suffix. In sim mode the same lenses exist as
 numeric adjustments inside `src/sim/brain.ts` — the sentences do nothing when
 there is no model reading them.
+
+## Trade attribution
+
+`TradeEvent.provider` is captured when a fill is recorded. BUY copies the house
+associated with the decision into the open position; SELL retains that house.
+Rewiring an agent later cannot rewrite historical fills. `BrainOpts` is
+captured before awaiting a snapshot so a request uses its compiled provider.
+REWIRE is refused during DECIDE or while a verdict is waiting to be consumed.
+
+## Acceptance and tasks
+
+Owner: `core/types.ts`, `core/agent.ts`, `core/brain.ts`; Village coordinates
+these contracts, and adapters implement them without changing their meaning.
+
+- [x] Never-throw and size/hold/confidence guards: `brain.test.ts`, `providers.test.ts`.
+- [x] State traversal and cold start: `village.test.ts`.
+- [x] Historical house attribution and pending-decision REWIRE refusal: `tape.test.ts`.
+- [ ] Any new adapter must satisfy the same failure and clamping tests.

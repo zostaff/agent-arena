@@ -10,125 +10,73 @@ import type {
   Market,
   Provider,
   Snapshot,
-  StrategyParams,
   Verdict,
 } from "./types.js";
-import type { BoostKind, CompiledConfig, StatKey, Stats } from "./config.js";
+import type { BoostKind, CompiledConfig, Stats } from "./config.js";
 import {
   compileConfig,
   normalizeProvider,
-  normalizeStats,
   PROVIDER_META,
   STAT_LABEL,
 } from "./config.js";
 import { CLASS_LENS, CLASS_STRATEGY } from "./brain.js";
+import { PaperAccount } from "./paper.js";
 import { fillPrice } from "./market.js";
 import { skipVerdict } from "./types.js";
 import type { AgentInit, AgentTickCtx, GridPos, NotifyKind } from "./agent.js";
 import { VillageAgent } from "./agent.js";
+import { parseBuild, type CustomAgentSpec } from "./build.js";
 
-export const GRID = 14;
-export const COIN_PER_ETH = 1000;
-/** Ticks between mark-to-market refreshes for pairs with open positions. */
-export const MARK_INTERVAL = 15;
-/** Base share of a winning trade the village takes. */
-export const BASE_TREASURY_CUT = 0.35;
-export const MINT_CUT_PER_LEVEL = 0.06;
-export const MAX_CUSTOM_AGENTS = 4;
-export const CUSTOM_DEPLOY_COST = 150;
-/** REWIRE: moving one agent to another house, mid-run, costs this many coins. */
-export const REWIRE_COST = 60;
+import {
+  COIN_PER_ETH,
+  MARK_INTERVAL,
+  BASE_TREASURY_CUT,
+  MINT_CUT_PER_LEVEL,
+  MAX_CUSTOM_AGENTS,
+  CUSTOM_DEPLOY_COST,
+  REWIRE_COST,
+  BASE_WALK_SPEED,
+  BUILDING_DEFS,
+  TERMINAL_POS,
+  UPGRADE_COST,
+  UPGRADE_TICKS,
+  CONSTRUCTION_TICKS,
+  RUSH_RATE,
+  MAX_BUILDING_LEVEL,
+  BOOST_DEFS,
+  type BuildingId,
+  type BoostDef,
+  type BuildingState,
+  type ActiveBoost,
+} from "./economy.js";
+import { parseSave, SAVE_VERSION, type VillageSave } from "./save.js";
 
-/**
- * Save format version. Bump it when a field changes meaning; a save from a
- * different version is refused, not guessed at, and the player starts fresh.
- */
-export const SAVE_VERSION = 1;
-/** Grid units per tick before RELAY. */
-export const BASE_WALK_SPEED = 0.055;
-
-export type BuildingId =
-  | "BARRACKS"
-  | "LAB"
-  | "VAULT"
-  | "REFINERY"
-  | "ACADEMY"
-  | "MINT"
-  | "RELAY"
-  | "NEXUS";
-
-export interface BuildingDef {
-  id: BuildingId;
-  /** Stat this building trains, or null for a utility building. */
-  trains: StatKey | null;
-  pos: GridPos;
-  /** Present from tick zero, or has to be constructed. */
-  prebuilt: boolean;
-  effect: string;
-}
-
-export const BUILDING_DEFS: readonly BuildingDef[] = Object.freeze([
-  { id: "BARRACKS", trains: "spd", pos: { gx: 2, gy: 2 }, prebuilt: true, effect: "trains SPD" },
-  { id: "LAB", trains: "ptn", pos: { gx: 11, gy: 2 }, prebuilt: true, effect: "trains PTN" },
-  { id: "VAULT", trains: "rsk", pos: { gx: 2, gy: 11 }, prebuilt: true, effect: "trains RSK" },
-  { id: "REFINERY", trains: "gas", pos: { gx: 11, gy: 11 }, prebuilt: true, effect: "trains GAS" },
-  { id: "ACADEMY", trains: null, pos: { gx: 6, gy: 1 }, prebuilt: false, effect: "+25% XP per level" },
-  { id: "MINT", trains: null, pos: { gx: 1, gy: 7 }, prebuilt: false, effect: "+6% treasury cut per level" },
-  { id: "RELAY", trains: null, pos: { gx: 12, gy: 6 }, prebuilt: false, effect: "+12% walk speed per level" },
-  { id: "NEXUS", trains: null, pos: { gx: 7, gy: 12 }, prebuilt: false, effect: "+12% position size per level" },
-]);
-
-export const TERMINAL_POS: GridPos = Object.freeze({ gx: 6.5, gy: 6.5 });
-
-/** Coins to reach level N. Index 0 is unused; L2 = 40 ... L5 = 650. */
-export const UPGRADE_COST: Readonly<Record<number, number>> = Object.freeze({
-  2: 40,
-  3: 110,
-  4: 280,
-  5: 650,
-});
-
-export const UPGRADE_TICKS: Readonly<Record<number, number>> = Object.freeze({
-  2: 420,
-  3: 700,
-  4: 1100,
-  5: 1700,
-});
-
-export const CONSTRUCTION_TICKS = 800;
-/** Coins per remaining tick when rushing. */
-export const RUSH_RATE = 0.06;
-export const MAX_BUILDING_LEVEL = 5;
-
-export interface BoostDef {
-  kind: BoostKind;
-  label: string;
-  cost: number;
-  ticks: number;
-  effect: string;
-}
-
-export const BOOST_DEFS: readonly BoostDef[] = Object.freeze([
-  { kind: "overclock", label: "OVERCLOCK", cost: 60, ticks: 900, effect: "poll interval / 3" },
-  { kind: "alphaFeed", label: "ALPHA FEED", cost: 90, ticks: 1200, effect: "context x2, reasoning x2" },
-  { kind: "leverage", label: "LEVERAGE", cost: 110, ticks: 600, effect: "position size x2" },
-  { kind: "zeroGas", label: "ZERO GAS", cost: 70, ticks: 1500, effect: "fees to zero" },
-]);
-
-export interface BuildingState {
-  id: BuildingId;
-  level: number;
-  pos: GridPos;
-  trains: StatKey | null;
-  /** null when idle; otherwise the job currently running. */
-  job: { kind: "build" | "upgrade"; toLevel: number; ticksLeft: number; totalTicks: number } | null;
-}
-
-export interface ActiveBoost {
-  kind: BoostKind;
-  ticksLeft: number;
-  totalTicks: number;
-}
+export type { CustomAgentSpec } from "./build.js";
+export {
+  GRID,
+  COIN_PER_ETH,
+  MARK_INTERVAL,
+  BASE_TREASURY_CUT,
+  MINT_CUT_PER_LEVEL,
+  MAX_CUSTOM_AGENTS,
+  CUSTOM_DEPLOY_COST,
+  REWIRE_COST,
+  BASE_WALK_SPEED,
+  BUILDING_DEFS,
+  TERMINAL_POS,
+  UPGRADE_COST,
+  UPGRADE_TICKS,
+  CONSTRUCTION_TICKS,
+  RUSH_RATE,
+  MAX_BUILDING_LEVEL,
+  BOOST_DEFS,
+  type BuildingId,
+  type BuildingDef,
+  type BoostDef,
+  type BuildingState,
+  type ActiveBoost,
+} from "./economy.js";
+export { parseSave, SAVE_VERSION, type AgentSave, type VillageSave } from "./save.js";
 
 export interface VillageNotification {
   id: number;
@@ -145,6 +93,7 @@ export interface TradeEvent {
   tick: number;
   agentId: string;
   agentName: string;
+  provider: Provider;
   cls: AgentClass;
   pair: string;
   action: "BUY" | "SELL";
@@ -152,46 +101,6 @@ export interface TradeEvent {
   sizeEth: number;
   pnlEth: number;
   reason: string;
-}
-
-export interface CustomAgentSpec {
-  name: string;
-  stats: Stats;
-  strategy: StrategyParams;
-  systemSuffix: string;
-  /** House the build is wired to. Defaults to Anthropic. */
-  provider?: Provider;
-}
-
-export interface AgentSave {
-  id: string;
-  name: string;
-  cls: AgentClass;
-  custom: boolean;
-  provider: Provider;
-  stats: Stats;
-  targetStats: Stats | null;
-  strategy: StrategyParams;
-  systemSuffix: string;
-  home: GridPos;
-  level: number;
-  xp: number;
-  realizedPnlEth: number;
-  trades: number;
-  wins: number;
-  decisions: number;
-  skips: number;
-  spentUsd: number;
-}
-
-export interface VillageSave {
-  version: number;
-  tick: number;
-  treasury: number;
-  totalSpentUsd: number;
-  buildings: { id: BuildingId; level: number; job: BuildingState["job"] }[];
-  boosts: ActiveBoost[];
-  agents: AgentSave[];
 }
 
 export interface VillageOptions {
@@ -202,137 +111,13 @@ export interface VillageOptions {
   /** Await every decision inline. Required for deterministic replays. */
   blockingDecisions?: boolean;
   startingTreasury?: number;
+  paperAccount?: PaperAccount;
   /** Preset roster; defaults to one of each class. */
   roster?: AgentInit[];
   /** Ticks between mark-to-market refreshes. */
   markInterval?: number;
   /** Called once per tick before agents step. The sim market advances here. */
   onTick?: (tick: number) => void | Promise<void>;
-}
-
-/* -------------------------------------------------------------- save guard */
-
-function num(v: unknown, fallback = 0): number {
-  return typeof v === "number" && Number.isFinite(v) ? v : fallback;
-}
-
-function nonNeg(v: unknown): number {
-  return Math.max(0, num(v));
-}
-
-function str(v: unknown, fallback = ""): string {
-  return typeof v === "string" ? v : fallback;
-}
-
-const CLASS_SET = new Set<AgentClass>(["SCOUT", "SNIPER", "WHALE", "ARB", "CUSTOM"]);
-const BOOST_SET = new Set<BoostKind>(["overclock", "alphaFeed", "leverage", "zeroGas"]);
-const BUILDING_SET = new Set<BuildingId>(BUILDING_DEFS.map((d) => d.id));
-
-function parseGrid(v: unknown, fallback: GridPos): GridPos {
-  const o = v as Partial<GridPos> | undefined;
-  if (!o || typeof o !== "object") return { ...fallback };
-  return { gx: num(o.gx, fallback.gx), gy: num(o.gy, fallback.gy) };
-}
-
-function parseStrategy(v: unknown, cls: AgentClass): StrategyParams {
-  const base = CLASS_STRATEGY[cls] ?? CLASS_STRATEGY.CUSTOM;
-  const o = (v ?? {}) as Partial<StrategyParams>;
-  const holdMin = Math.max(1, num(o.holdMin, base.holdMin));
-  return {
-    entryThreshold: num(o.entryThreshold, base.entryThreshold),
-    maxCurve: num(o.maxCurve, base.maxCurve),
-    holdMin,
-    holdMax: Math.max(holdMin, num(o.holdMax, base.holdMax)),
-    sizeMult: Math.max(0, num(o.sizeMult, base.sizeMult)),
-    requireBookAlign:
-      typeof o.requireBookAlign === "boolean" ? o.requireBookAlign : base.requireBookAlign,
-  };
-}
-
-/**
- * Validates an unknown blob into a VillageSave, or returns null.
- *
- * Every number is coerced and clamped and every id is checked against the set
- * the engine knows. A save is data from disk, which means it is data from
- * anywhere: it gets the same distrust as a model's verdict.
- */
-export function parseSave(input: unknown): VillageSave | null {
-  if (!input || typeof input !== "object") return null;
-  const raw = input as Record<string, unknown>;
-  if (raw.version !== SAVE_VERSION) return null;
-  if (!Array.isArray(raw.agents) || !Array.isArray(raw.buildings)) return null;
-
-  const buildings: VillageSave["buildings"] = [];
-  for (const entry of raw.buildings as Record<string, unknown>[]) {
-    const id = entry?.id as BuildingId;
-    if (!BUILDING_SET.has(id)) continue;
-    const level = Math.max(0, Math.min(MAX_BUILDING_LEVEL, Math.floor(nonNeg(entry.level))));
-    const jobRaw = entry.job as Record<string, unknown> | null | undefined;
-    const job =
-      jobRaw && (jobRaw.kind === "build" || jobRaw.kind === "upgrade")
-        ? {
-            kind: jobRaw.kind as "build" | "upgrade",
-            toLevel: Math.max(1, Math.min(MAX_BUILDING_LEVEL, Math.floor(nonNeg(jobRaw.toLevel)))),
-            ticksLeft: Math.floor(nonNeg(jobRaw.ticksLeft)),
-            totalTicks: Math.max(1, Math.floor(nonNeg(jobRaw.totalTicks))),
-          }
-        : null;
-    buildings.push({ id, level, job });
-  }
-
-  const boosts: ActiveBoost[] = [];
-  for (const entry of (Array.isArray(raw.boosts) ? raw.boosts : []) as Record<string, unknown>[]) {
-    const kind = entry?.kind as BoostKind;
-    if (!BOOST_SET.has(kind)) continue;
-    const ticksLeft = Math.floor(nonNeg(entry.ticksLeft));
-    if (ticksLeft <= 0) continue;
-    boosts.push({
-      kind,
-      ticksLeft,
-      totalTicks: Math.max(ticksLeft, Math.floor(nonNeg(entry.totalTicks))),
-    });
-  }
-
-  const agents: AgentSave[] = [];
-  for (const entry of raw.agents as Record<string, unknown>[]) {
-    if (!entry || typeof entry !== "object") continue;
-    const id = str(entry.id);
-    if (!id) continue;
-    const cls = CLASS_SET.has(entry.cls as AgentClass) ? (entry.cls as AgentClass) : "CUSTOM";
-    agents.push({
-      id,
-      name: str(entry.name, id).slice(0, 24),
-      cls,
-      custom: entry.custom === true,
-      provider: normalizeProvider(entry.provider),
-      stats: normalizeStats((entry.stats ?? {}) as Partial<Stats>),
-      targetStats: entry.targetStats
-        ? normalizeStats(entry.targetStats as Partial<Stats>)
-        : null,
-      strategy: parseStrategy(entry.strategy, cls),
-      systemSuffix: str(entry.systemSuffix),
-      home: parseGrid(entry.home, { gx: 6, gy: 6 }),
-      level: Math.floor(nonNeg(entry.level)),
-      xp: nonNeg(entry.xp),
-      realizedPnlEth: num(entry.realizedPnlEth),
-      trades: Math.floor(nonNeg(entry.trades)),
-      wins: Math.floor(nonNeg(entry.wins)),
-      decisions: Math.floor(nonNeg(entry.decisions)),
-      skips: Math.floor(nonNeg(entry.skips)),
-      spentUsd: nonNeg(entry.spentUsd),
-    });
-  }
-  if (agents.length === 0) return null;
-
-  return {
-    version: SAVE_VERSION,
-    tick: Math.floor(nonNeg(raw.tick)),
-    treasury: nonNeg(raw.treasury),
-    totalSpentUsd: nonNeg(raw.totalSpentUsd),
-    buildings,
-    boosts,
-    agents,
-  };
 }
 
 function classHome(index: number): GridPos {
@@ -369,6 +154,7 @@ export function defaultRoster(): AgentInit[] {
 }
 
 export class Village {
+  readonly paperAccount?: PaperAccount;
   readonly market: Market;
   readonly brain: Brain;
   readonly rng: () => number;
@@ -395,6 +181,7 @@ export class Village {
   totalSpentUsd = 0;
 
   constructor(opts: VillageOptions) {
+    this.paperAccount = opts.paperAccount;
     this.market = opts.market;
     this.brain = opts.brain;
     this.rng = opts.rng ?? Math.random;
@@ -538,6 +325,9 @@ export class Village {
 
   /** DEPLOY from FORGE. Costs 150 coins, capped at 4 custom agents. */
   deployCustom(spec: CustomAgentSpec): VillageAgent | null {
+    const parsed = parseBuild(spec);
+    if (!parsed.ok) return null;
+    spec = parsed.draft;
     if (this.customCount >= MAX_CUSTOM_AGENTS) return null;
     if (this.treasury < CUSTOM_DEPLOY_COST) return null;
     this.treasury -= CUSTOM_DEPLOY_COST;
@@ -571,6 +361,7 @@ export class Village {
     const next = normalizeProvider(provider);
     if (agent.provider === next) return false;
     if (agent.position) return false;
+    if (agent.state === "DECIDE" || agent.decideBusy || agent.pendingVerdict) return false;
     if (this.treasury < REWIRE_COST) return false;
     this.treasury -= REWIRE_COST;
     agent.provider = next;
@@ -808,14 +599,17 @@ export class Village {
       return;
     }
     agent.lastPair = pair;
+    const opts = this.brainOpts(agent, config);
     const work = (async () => {
       const snap = await this.market.snapshot(pair, config.ctxCandles);
       this.snapshots.set(pair, snap);
-      const verdict = await this.brain.decide(snap, this.brainOpts(agent, config));
+      const verdict = await this.brain.decide(snap, opts);
+      agent.verdictProvider = config.provider;
       agent.pendingVerdict = verdict;
       agent.spentUsd += config.costPerDecision;
       this.totalSpentUsd += config.costPerDecision;
     })().catch(() => {
+      this.snapshots.delete(pair);
       agent.pendingVerdict = {
         action: "SKIP",
         sizeEth: 0,
@@ -834,18 +628,21 @@ export class Village {
     if (!snap) return;
 
     const sizeEth = Math.min(verdict.sizeEth, config.positionSizeEth);
-    if (sizeEth <= 0) return;
+    if (!Number.isFinite(sizeEth) || sizeEth <= 0) return;
 
-    const entry = fillPrice(snap.asks, sizeEth, snap.last);
+    const paperFill = this.paperAccount?.buy(snap, sizeEth, config.slippageBps);
+    if (this.paperAccount && !paperFill) return;
+    const entry = paperFill?.price ?? fillPrice(snap.asks, sizeEth, snap.last);
     const slipBps = snap.last > 0 ? ((entry - snap.last) / snap.last) * 10_000 : 0;
-    if (slipBps > config.slippageBps) {
+    if (!paperFill && slipBps > config.slippageBps) {
       /* GAS was not paid for. The fill is refused, not eaten. */
       this.pushNotification(agent, "SLIPPAGE", "info");
       return;
     }
-    const fee = sizeEth * (config.feeBps / 10_000);
+    const fee = paperFill?.fee ?? sizeEth * (config.feeBps / 10_000);
     agent.position = {
       pair,
+      provider: agent.verdictProvider ?? agent.provider,
       entryPrice: entry,
       sizeEth,
       tokens: sizeEth / entry,
@@ -858,6 +655,7 @@ export class Village {
       tick: this.tick,
       agentId: agent.id,
       agentName: agent.name,
+      provider: agent.position.provider ?? agent.provider,
       cls: agent.cls,
       pair,
       action: "BUY",
@@ -872,7 +670,7 @@ export class Village {
     const pos = agent.position;
     if (!pos) return;
     const snap = this.snapshots.get(pos.pair);
-    if (!snap) return;
+    if (!snap || (this.paperAccount && !this.paperAccount.fresh(snap))) return;
     const value = pos.tokens * snap.last;
     pos.unrealizedEth = value - pos.sizeEth - pos.feePaidEth;
   }
@@ -882,12 +680,14 @@ export class Village {
     if (!pos) return;
     const snap = this.snapshots.get(pos.pair);
     const config = this.configFor(agent);
-    const exit = snap ? fillPrice(snap.bids, pos.sizeEth, snap.last) : pos.entryPrice;
+    const paperFill = snap ? this.paperAccount?.sell(snap, pos.tokens, config.slippageBps) : null;
+    if (this.paperAccount && !paperFill) return;
+    const exit = paperFill?.price ?? (snap ? fillPrice(snap.bids, pos.sizeEth, snap.last) : pos.entryPrice);
     const proceeds = pos.tokens * exit;
-    const exitFee = proceeds * (config.feeBps / 10_000);
+    const exitFee = paperFill?.fee ?? proceeds * (config.feeBps / 10_000);
     let pnl = proceeds - exitFee - pos.sizeEth - pos.feePaidEth;
 
-    if (pnl > 0) {
+    if (pnl > 0 && !this.paperAccount) {
       const cut = pnl * this.treasuryCutRate;
       this.treasury += cut * COIN_PER_ETH;
       pnl -= cut;
@@ -899,6 +699,7 @@ export class Village {
       tick: this.tick,
       agentId: agent.id,
       agentName: agent.name,
+      provider: pos.provider ?? agent.provider,
       cls: agent.cls,
       pair: pos.pair,
       action: "SELL",
@@ -914,8 +715,13 @@ export class Village {
     for (const a of this.agents) if (a.position) held.add(a.position.pair);
     for (const pair of held) {
       const cfg = { ctx: 24 };
-      const snap = await this.market.snapshot(pair, cfg.ctx);
-      this.snapshots.set(pair, snap);
+      try {
+        const snap = await this.market.snapshot(pair, cfg.ctx);
+        this.snapshots.set(pair, snap);
+      } catch {
+        // No quote is preferable to settling at an obsolete price.
+        this.snapshots.delete(pair);
+      }
     }
   }
 
@@ -962,6 +768,11 @@ export class Village {
   view() {
     return {
       tick: this.tick,
+      paperCashEth: this.paperAccount?.cashEth,
+      paperFeeBps: this.paperAccount?.feeBps,
+      paperPnlEth: this.paperAccount
+        ? this.agents.reduce((sum, a) => sum + a.realizedPnlEth + a.unrealizedPnlEth, 0)
+        : undefined,
       treasury: this.treasury,
       netPnlEth: this.netPnlEth,
       totalSpentUsd: this.totalSpentUsd,

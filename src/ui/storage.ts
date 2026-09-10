@@ -140,16 +140,16 @@ export async function loadMe(): Promise<Me> {
  * engine's `parseSave` decides whether it is usable, because validation
  * belongs next to the invariants and not next to the storage adapter.
  */
-export async function loadVillageSave(): Promise<unknown> {
-  return readKey<unknown>(VILLAGE_KEY, false, null);
+export async function loadVillageSave(mode = "SIM"): Promise<unknown> {
+  return readKey<unknown>(mode === "SIM" ? VILLAGE_KEY : `${VILLAGE_KEY}_${mode}`, false, null);
 }
 
-export async function saveVillage(save: unknown): Promise<void> {
-  await writeKey(VILLAGE_KEY, save, false);
+export async function saveVillage(save: unknown, mode = "SIM"): Promise<void> {
+  await writeKey(mode === "SIM" ? VILLAGE_KEY : `${VILLAGE_KEY}_${mode}`, save, false);
 }
 
-export async function clearVillageSave(): Promise<void> {
-  await writeKey(VILLAGE_KEY, null, false);
+export async function clearVillageSave(mode = "SIM"): Promise<void> {
+  await writeKey(mode === "SIM" ? VILLAGE_KEY : `${VILLAGE_KEY}_${mode}`, null, false);
 }
 
 export async function saveMe(me: Me): Promise<void> {

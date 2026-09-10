@@ -17,7 +17,9 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "chain": "tsx scripts/chain-probe.ts",
-    "paper": "MODE=paper tsx src/run.ts"
+    "paper": "MODE=paper tsx src/run.ts",
+    "paper:chain": "MODE=chain-demo tsx src/run.ts",
+    "paper:check": "tsx scripts/paper-check.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

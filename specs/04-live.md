@@ -203,3 +203,25 @@ that would sign prints the exact call instead:
 ```
 [DRY RUN] pons.buy(token=0x…, minTokensOut=…, deadline=…) value=0.0500 ETH pair=$DGEN slippage=52bps reason="mom 1.9% imb 0.31"
 ```
+
+## Acceptance and remaining roadmap work
+
+Owner: `live/brain.ts`, `live/providers.ts`, `live/router.ts`,
+`live/pons.ts`, `live/execute.ts`. These modules own network and signing I/O;
+no credentials or provider clients belong in the browser or core.
+
+- [x] Defensive wire behavior on fixtures: `brain.test.ts`, `providers.test.ts`.
+- [x] Selector refusal on bytecode fixtures: `chain.test.ts`.
+- [ ] Roadmap 2: pin a real buy transaction hash, destination, calldata and
+  decoded argument meaning; locate and independently prove the sell route.
+  Add fixtures for both paths before replacing the ABI or relaxing the gate.
+- [ ] Roadmap 3: one authenticated 200 with a parsed verdict from OpenAI and
+  xAI; record timestamp, model, redacted `onTrace` output and any wire correction.
+  Fixture success alone does not satisfy this requirement.
+- [ ] Roadmap 4: rolling median request duration per house with sample count
+  in the inspector. Define window size and whether failed attempts count;
+  zero samples must show unavailable, and measurements never change SPD.
+
+This refactor changes no live adapter, model ID, pricing table, ABI or signing
+switch. No new chain transaction or authenticated provider response was collected.
+The dated observations above remain historical evidence, not fresh verification.

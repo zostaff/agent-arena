@@ -19,7 +19,24 @@ read the code today** comes before what would impress them — with one standing
 exception: something that spoils the first thirty seconds for a new player
 outranks everything, because nobody reaches the good part through a bad start.
 
-![The board](assets/roadmap-board.png)
+![Agent Arena development roadmap — token launch on Robinhood Chain is a planned milestone](assets/roadmap-2026-09.png)
+
+**TOKEN LAUNCH ON ROBINHOOD CHAIN** is a planned development milestone.
+Utility, vesting, treasury controls, legal review and an independent audit precede
+launch. The illustration shows milestone order, not release dates.
+
+| Order | Milestone | Completion criteria |
+|---|---|---|
+| 01 | Public paper alpha | Browser QA, outage recovery, reviewed release and a verified public URL |
+| 02 | Persistent sessions | Shared feed, durable paper balances and trade history |
+| 03 | Real AI agents | Verified server-side model calls, latency and spending limits |
+| 04 | Verified competitions | Authoritative rankings, fixed rules and replayable results |
+| 05 | Pons market data | Verified swaps, candles, token mapping and liquidity |
+| **06** | **TOKEN LAUNCH ON ROBINHOOD CHAIN** | **Utility, vesting, treasury, legal review, testnet and independent audit** |
+
+Full contracts: [public alpha](specs/14-public-paper-alpha.md),
+[launch and visibility](specs/15-launch-and-visibility.md),
+[token development](specs/16-development-token.md).
 
 ---
 
@@ -31,10 +48,10 @@ never of inventing something that merely sounds like progress. Each block ends
 with the honest limit, because an update that names its own gap is the one
 people believe.
 
-Where it stands today: **7,633 lines of TypeScript across 32 files, 1,967 lines
-of tests (156 green), 1,082 lines of spec** — typechecked, tested and built by
-CI on every push. Three modes: seeded sim, **paper on real chain tokens**, and
-live.
+The committed baseline has **162 passing tests** and three modes: seeded sim,
+**paper on real chain tokens**, and live. Uncommitted implementation and its
+validation status are tracked separately below; historical release entries
+retain their original measurements.
 
 ### 2026-09-07 · Cold start fixed, and a router ABI that was wrong all along — [`ca97ddd`](https://github.com/zostaff/agent-arena/commit/ca97ddd)
 
@@ -240,9 +257,98 @@ stat bars on top, the config they compile to underneath.*
 
 ---
 
+## Implemented locally · 2026-09-08 · uncommitted
+
+### 1. Domain boundaries and actionable specs
+
+Economy definitions and save validation are extracted from Village. Build
+validation lives in core; FORGE widgets and the paste form are separate React
+components. Compatibility exports preserve existing callers. Every subsystem
+spec names its owner, acceptance checks and remaining tasks; the entry point is
+[specs/README.md](specs/README.md), with boundaries in
+[spec 12](specs/12-architecture.md).
+
+### 5. FORGE imports build JSON
+
+Paste, validate, load. The same validator protects board LOAD and deployment:
+finite ranges, a 20-point budget, unknown-house fallback, and no trust in
+imported compiled config or performance claims. Backtest results belong to the
+draft that produced them, including when an import occurs during a run.
+Contract: [spec 06](specs/06-forge.md).
+
+### 6. The DEX tape records the house
+
+Each BUY/SELL stores its provider rather than looking up the agent's current
+house during rendering. REWIRE refuses a pending decision, and earlier fills
+keep their attribution after rewiring. Contracts:
+[spec 01](specs/01-core-contracts.md), [spec 07](specs/07-ui.md).
+
+### 8. Explicit local-save scope
+
+The app says “Progress saved in this browser · no cloud sync” below the header.
+No cloud slot is implemented. Contract: [spec 13](specs/13-persistence.md).
+
+**Validation:** 206 tests across 13 files (44 added), including module
+boundaries, hostile imports, atomic deployment refusal and historical house
+attribution. Typecheck, production build and `git diff --check` pass. Browser smoke testing remains pending because
+native browser automation disconnected before the page could be inspected.
+These changes have not been committed, pushed or deployed.
+
+## Implemented locally · 2026-09-10 · public paper alpha
+
+- Real Coinbase SOL-ETH/LINK-ETH/ADA-ETH book and candles, public read-only API.
+- Strict virtual account: 10 ETH, 60 bps fee assumption, quote-budget buys,
+  token-quantity sells, cash/depth/slippage/freshness guards.
+- Core paper ledger and UI market session extracted into independent modules.
+- Quote outages preserve positions in SETTLE; recovery closes exactly once.
+- PAPER is ephemeral, isolated from SIM/CHAIN saves and unverified village scores.
+- Specs 14–16 cover public alpha, launch/private boundaries and development token.
+- Pages auto-deployment is opt-in via `PAGES_ENABLED`, preventing permanent
+  failures on repositories that have not enabled Pages yet.
+
+**Validation:** typecheck, 223 tests / 14 files, production build and diff check.
+A 120-tick CLI session read all three products and reported feed `live`; agents
+made decisions but no entry signal fired, so no live-feed fill was observed.
+Buy/sell arithmetic and outage/recovery are verified by deterministic tests.
+Chrome rendered the app and mode controls; the automation connection timed out
+after switching to PAPER, so full browser interaction/CORS QA remains incomplete.
+These changes are local, uncommitted, unpushed and undeployed.
+
+**For a post:** the demo now has a real-price paper path and a bounded virtual
+account. This is not Pons swap decoding, a production broker, paid LLM verification
+or a server-authoritative competition. Token work is a roadmap/design milestone.
+
 ## Next up
 
+### 10. Public paper alpha — real quotes, virtual funds (2026-09-10)
+
+Owner: [spec 14](specs/14-public-paper-alpha.md). Add a public Coinbase
+ETH-quoted market, a bounded virtual account and strict book execution; refuse
+stale/invalid data and insufficient depth. Isolate sessions from saved SIM P&L.
+No wallet or model API keys in the browser. Keep chain-identity/sim-price mode
+explicitly labelled. Validate with fixtures, a public-feed probe and browser QA.
+
+### 11. **TOKEN LAUNCH ON ROBINHOOD CHAIN** — development and launch gates
+
+Owner: [spec 16](specs/16-development-token.md). Plan a token on **Robinhood Chain** to support project
+development, after a useful free paper alpha and repeat usage. Specify utility,
+funding alternatives, supply, allocations, vesting, treasury reporting and
+multisig controls. Get jurisdiction-specific review, independent contract audit
+and testnet evidence before any issuance. No token sale, deployment, investment
+return promise or required token purchase is authorized by this roadmap item.
+
+### 12. Public/private split and community launch
+
+Owner: [spec 15](specs/15-launch-and-visibility.md). Keep the demo, engine,
+contracts, tests and reproducibility public; isolate hosted service operations,
+secrets and proprietary strategies. Ship a no-signup demo and run a small,
+measured feedback cohort before a wider launch. See the operator guide
+[docs/LAUNCH.md](docs/LAUNCH.md).
+
+
 ### 2. The real buy and sell paths
+
+Owner and evidence checklist: [spec 04](specs/04-live.md), [spec 11](specs/11-chain-feed.md).
 
 The selector preflight proved the pinned ABI cannot dispatch and now refuses to
 sign — safe, but not working. `buy(uint256,uint256,address)` exists on the
@@ -256,6 +362,8 @@ the preflight goes green on its own rather than by being told to.
 
 ### 3. Prove the two new wires against a live 200
 
+Owner and evidence checklist: [spec 04](specs/04-live.md).
+
 `providers.test.ts` drives OpenAI and xAI through fixtures. Neither has ever
 answered this code for real. Everything about the request shape is *inferred
 from vendor docs*, and docs and deployments disagree all the time — that is
@@ -267,6 +375,8 @@ forced. Until then the honest claim is "typed and tested", not "working".
 
 ### 4. Latency measured per house, never assumed
 
+Owner and acceptance criteria: [spec 04](specs/04-live.md), [spec 07](specs/07-ui.md).
+
 `BrainTrace.ms` is recorded and then thrown away. Round-trip time is a real
 difference between houses and it belongs in the HUD — as a *measurement*, with
 a sample count.
@@ -275,26 +385,15 @@ a sample count.
 It must not feed the stat compiler: SPD is the poll interval the player bought,
 not a vendor's mood.
 
-### 5. FORGE can import a build JSON
-
-EXPORT JSON exists; there is no way back in. A build shared outside the board
-is currently a screenshot.
-
-**Done means:** a paste box that validates and loads, rejecting unknown
-providers to the default rather than compiling an undefined ladder.
-
-### 6. The DEX overlay says which house produced each verdict
-
-The trade tape shows the reason, not the brain. With three houses in one
-village that is the most interesting column on the screen and it is missing.
-
 ### 7. Real prices: decode the Uniswap v4 swaps
 
-The single biggest gap in the project. Paper mode reads the token universe from
-chain and then simulates the price, because Pons v2 settles through Uniswap v4:
+Owner and evidence checklist: [spec 11](specs/11-chain-feed.md), [spec 10](specs/10-paper-trading.md).
+
+The largest remaining gap in the Pons adapter. CHAIN mode reads the token universe
+and then simulates the price, because Pons v2 settles through Uniswap v4:
 a trade is a `Swap` on the PoolManager keyed by pool id, not an event on the
-Pons router. Everything downstream — the tape, the candles, the P&L — is real
-the moment this is decoded.
+Pons router. Decoding enables observed prices and candles. Paper fills and P&L remain
+simulated execution results even when based on real market observations.
 
 **Done means:** the PoolManager address and pool id derivation are pinned in
 `specs/11-chain-feed.md`, `RpcMarket` serves OHLC built from real swaps, and
@@ -303,28 +402,18 @@ codebase has to change — that one label is wired through the UI already.
 
 ---
 
-### 8. A cloud save slot, or an honest note that there isn't one
-
-The village now persists per browser. Open it on a phone and it is a different
-village, and clearing site data still wipes it. `window.storage` already has a
-shared mode — the board uses it — so the machinery exists.
-
-**Done means:** either a per-owner village slot that follows the player, or one
-line in the UI saying plainly that progress is local to this browser. The
-second is a fifteen-minute job and is better than an unkept implication.
-
 ### 9. Finish the publish
+
+Owner: [spec 09](specs/09-tests.md), `.github/workflows/pages.yml`.
 
 `pages.yml` builds and is ready to deploy; the site itself still has to be
 created once in Settings → Pages (Source: GitHub Actions), because the Actions
 token is refused with `Resource not accessible by integration` when it tries to
-create it. Until that switch is flipped the pages workflow will keep failing on
-every push, which is exactly the kind of permanent red that people learn to
-ignore.
+create it. Automatic Pages builds are now opt-in with `PAGES_ENABLED=true`; manual
+dispatch remains available after Pages is configured.
 
-**Done means:** the switch is flipped and the live URL is in the README — or,
-if it stays off, `pages.yml` drops to `workflow_dispatch` so the failure is not
-a standing one.
+**Done means:** Pages is configured, deployment succeeds for the reviewed
+release, and the verified public URL is in the README.
 
 ## Later
 

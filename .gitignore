@@ -7,3 +7,10 @@ dist/
 .vite/
 coverage/
 tsconfig.tsbuildinfo
+
+# All local environment variants; the tracked template stays public.
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/

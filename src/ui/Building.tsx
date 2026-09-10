@@ -7,8 +7,7 @@
 import React from "react";
 import { TILE_H, TILE_W, iso } from "./iso.js";
 import { PALETTE, shade } from "./theme.js";
-import type { BuildingState } from "../core/village.js";
-import { MAX_BUILDING_LEVEL } from "../core/village.js";
+import { MAX_BUILDING_LEVEL, type BuildingState } from "../core/economy.js";
 
 export interface BuildingProps {
   building: BuildingState;

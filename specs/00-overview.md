@@ -7,6 +7,10 @@ engine reads on the next tick.
 
 > The village is a config editor with a progress bar in front of it.
 
+See the [specification index](README.md) for subsystem ownership, acceptance
+checks and remaining tasks, and [architecture decisions](12-architecture.md)
+for the dependency rules.
+
 ## The one idea
 
 `src/core/config.ts` compiles four stats — and the **house** the agent is wired
@@ -29,12 +33,12 @@ stat is cosmetic and no cosmetic is a stat.
    seeded, deterministic, free      Anthropic · OpenAI · xAI, routed per agent
               │                                 │
               └──────────► src/run.ts ◄─────────┘
-                         MODE=sim | MODE=live
+                         MODE=sim | MODE=paper | MODE=live
                                  │
                             src/ui (React, SVG, canvas-free)
 ```
 
-`src/core` imports nothing. That is what makes the same engine run in node and
+`src/core` has no external runtime dependencies; its modules import each other. That is what makes the same engine run in node and
 in the browser, and what makes a backtest and a live session comparable.
 
 ## File map
@@ -46,7 +50,10 @@ in the browser, and what makes a backtest and a live session comparable.
 | `src/core/market.ts` | candle aggregation, momentum, book maths, prompt serialization |
 | `src/core/brain.ts` | prompt assembly, class lenses, verdict parsing + hardening |
 | `src/core/agent.ts` | agent state machine, pathing, training, XP and levels |
-| `src/core/village.ts` | buildings, treasury, boosts, roster, fills, tick loop |
+| `src/core/economy.ts` | building and boost definitions, prices, domain state types |
+| `src/core/save.ts` | versioned save schema and hostile-input validation |
+| `src/core/build.ts` | authored build schema, JSON parsing and strategy limits |
+| `src/core/village.ts` | treasury mutations, roster, fills, tick orchestration |
 | `src/sim/rng.ts` | mulberry32 + gaussian |
 | `src/sim/market.ts` | seeded momentum random walk, OHLC, synthetic book |
 | `src/sim/brain.ts` | deterministic heuristic brain reading `StrategyParams` |
@@ -56,11 +63,15 @@ in the browser, and what makes a backtest and a live session comparable.
 | `src/live/pons.ts` | Bitquery GraphQL, `PonsLaunches` + `PonsOHLC`, 8s cache |
 | `src/live/brain.ts` | Anthropic Messages API, never throws out of `decide()` |
 | `src/live/execute.ts` | viem, chain 4663, Pons router, `dryRun: true` by default |
+| `src/live/rpc.ts` | raw JSON-RPC, token launches and selector evidence |
+| `src/paper/market.ts` | chain token identities with address-seeded simulated prices |
+| `src/ui/ForgeWidgets.tsx` | stateless FORGE controls, metrics and equity curve |
+| `src/ui/BuildImport.tsx` | JSON paste form and validation feedback |
 | `src/ui/*` | isometric SVG renderer, HUD, REWIRE panel, DEX overlay, FORGE, leaderboard |
 | `src/ui/ErrorBoundary.tsx` | the last line of defence: a crash shows what broke and offers to wipe the save |
 | `.github/workflows/*` | `ci.yml` typechecks, tests and builds; `pages.yml` publishes the village |
 | `assets/banner.svg` | README banner, source of truth; `banner.png` is rendered from it |
-| `src/run.ts` | node entry, `MODE` switches sim/live |
+| `src/run.ts` | node entry, `MODE` switches sim/paper/live |
 
 ## Reading order for a new session
 
@@ -77,9 +88,17 @@ in the browser, and what makes a backtest and a live session comparable.
 
 ```bash
 npm install
-npm test          # 95 tests
+npm test          # 206 tests
 npm run sim       # MODE=sim, 60fps, seeded
+npm run paper     # real token identities, simulated prices, public RPC
 npm run dev       # the village in a browser
 MODE=live npm run live   # needs BITQUERY_TOKEN + the key of each house in use
 AGENT_PROVIDERS=xai,openai MODE=live npm run live   # wire the roster in order
 ```
+
+## Acceptance and tasks
+
+- [x] All three modes and extracted modules appear in the file map.
+- [x] [Spec 12](12-architecture.md) defines dependency direction.
+- [x] [Spec 09](09-tests.md) defines the completion gate.
+- [ ] Keep this map current whenever an entry point or module owner changes.

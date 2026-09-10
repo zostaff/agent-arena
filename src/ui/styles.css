@@ -31,6 +31,7 @@ body {
 button, input, textarea { font-family: var(--mono); }
 
 .dv-app { display: flex; flex-direction: column; height: 100%; }
+.dv-save-note { padding: 4px 16px; color: var(--ink-dim); font-size: 10px; text-align: right; }
 
 /* ---------------------------------------------------------------- top bar */
 
@@ -283,7 +284,7 @@ button, input, textarea { font-family: var(--mono); }
   border-bottom: 1px solid rgba(204, 255, 0, 0.06);
 }
 .dv-pos { grid-template-columns: 74px 60px 72px 1fr 62px; }
-.dv-tape-row { grid-template-columns: 38px 74px 60px 52px 62px 1fr; align-items: center; }
+.dv-tape-row { grid-template-columns: 38px 74px 78px 60px 52px 62px minmax(0, 1fr); align-items: center; }
 .dv-tape-reason { color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dv-empty { color: var(--ink-dim); font-size: 10px; padding: 6px 0; }
 

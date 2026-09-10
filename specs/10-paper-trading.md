@@ -1,3 +1,8 @@
+> 2026-09-10: The legacy adapter described below is now **CHAIN** in the UI
+> and `npm run paper:chain` in CLI. **PAPER** / `npm run paper` now uses real
+> Coinbase quotes and a virtual account; see [spec 14](14-public-paper-alpha.md).
+> These are distinct markets and must never share scores or saved positions.
+
 # 10 — Paper trading (`src/paper/`, `MODE=paper`)
 
 **The mode to hand someone who just wants to watch the bots trade.** It needs
@@ -59,3 +64,16 @@ launch.
 
 `PaperMarket` starts with **no pairs at all**. It never shows an invented
 ticker, not even for the second before the chain answers.
+
+## Acceptance and tasks
+
+Owner: `paper/market.ts` combines RPC token identity with the simulator;
+`run.ts` and `ui/App.tsx` own refresh scheduling.
+
+- [x] Empty-before-read universe, duplicate symbols, address seeding and
+  explicit provenance: `chain.test.ts`.
+- [x] No invented fallback ticker when the universe is empty.
+- [ ] Roadmap 7: replace simulated prices only after real swap decoding meets
+  the evidence and OHLC requirements in [spec 11](11-chain-feed.md).
+- [ ] A fresh public-RPC smoke test is external verification, not part of the
+  offline refactor gate. Until prices are decoded, retain the `sim` label.

@@ -82,7 +82,7 @@ export function heuristicBrain(options: HeuristicOptions = {}): Brain {
 
     /* Class lenses, expressed as numbers rather than sentences. */
     let edge = mom / Math.max(s.entryThreshold, 1e-6) - 1;
-    if (opts.agentClass === "SCOUT" && snap.ageMinutes < 8) edge += 0.6;
+    if (opts.agentClass === "SCOUT" && snap.provenance?.identity !== "exchange" && snap.ageMinutes < 8) edge += 0.6;
     if (opts.agentClass === "WHALE" && snap.curveProgressPct > 40) edge += 0.5;
     if (opts.agentClass === "ARB") edge += imb * 1.2;
     if (opts.agentClass === "SNIPER") edge -= 0.35;

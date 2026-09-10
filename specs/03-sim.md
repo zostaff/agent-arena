@@ -112,3 +112,16 @@ frozen, so `costPerDecision` is constant, the whole bill is
 `decisions * costPerDecision`, and all three houses can be priced from **one**
 run instead of three. The FORGE uses it to show what the same build would net
 on each house.
+
+## Acceptance and tasks
+
+Owner: `sim/rng.ts`, `sim/market.ts`, `sim/brain.ts`, `sim/backtest.ts`.
+The market advances on ticks; the brain consumes authored strategy; accounting
+prices the decision independently of the heuristic result.
+
+- [x] Identical seed/build replay: `determinism.test.ts`.
+- [x] Different seeds diverge; candles remain reproducible: `market.test.ts`.
+- [x] Identical gross outcomes across houses, correct net deduction: `net.test.ts`.
+- [ ] Replay export should carry seed, duration and a validated build; it must
+  not trust a claimed performance summary in imported JSON.
+- [ ] Any deliberate market retuning requires an explicit board-version decision.

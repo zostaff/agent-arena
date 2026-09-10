@@ -1,10 +1,10 @@
 /**
  * DEGEN VILLAGE — node entry point.
  *
- *   MODE=paper npm run paper  PaperMarket + heuristicBrain — real Robinhood
- *                              Chain tokens, simulated prices, no keys at all
- *   MODE=sim  npm run sim    SimMarket  + heuristicBrain, 60fps
- *   MODE=live npm run live   PonsMarket + liveBrain,     pollIntervalMs
+ *   npm run paper       Coinbase real quotes + virtual ETH + heuristicBrain
+ *   npm run paper:chain Robinhood identities + simulated prices
+ *   npm run sim         Seeded offline simulation
+ *   npm run live        Legacy market + model adapter composition
  *
  * liveBrain routes each agent to the house it is wired to: Anthropic, OpenAI
  * or xAI. AGENT_PROVIDERS=xai,openai wires the roster in order at boot.
@@ -19,6 +19,8 @@ import { SimMarket } from "./sim/market.js";
 import { heuristicBrain } from "./sim/brain.js";
 import { mulberry32 } from "./sim/rng.js";
 import { PonsMarket } from "./live/pons.js";
+import { CoinbasePaperMarket } from "./paper/coinbase.js";
+import { PaperAccount } from "./core/paper.js";
 import { PaperMarket } from "./paper/market.js";
 import type { BrainTrace } from "./live/brain.js";
 import { liveBrain } from "./live/router.js";
@@ -43,7 +45,7 @@ function report(village: Village, mode: string): void {
     `[${mode}] t=${String(v.tick).padStart(6)} ` +
     `treasury=${fmt(v.treasury, 1)} ` +
     `net=${fmt(v.netPnlEth)} ETH ` +
-    `spent=$${v.totalSpentUsd.toFixed(4)}`;
+    `estimatedInference=$${v.totalSpentUsd.toFixed(4)}`;
   const rows = v.agents
     .map((a) => {
       const cfg = a.config;
@@ -145,7 +147,7 @@ async function runLive(): Promise<void> {
  * Needs no API key of any kind — the public RPC is free — which is what makes
  * it the mode to hand someone who just wants to watch the bots trade.
  */
-async function runPaper(): Promise<void> {
+async function runChainDemo(): Promise<void> {
   const market = new PaperMarket({ universe: Number(env("PAPER_PAIRS", "6")) });
   const village = new Village({
     market,
@@ -186,16 +188,45 @@ async function runPaper(): Promise<void> {
   report(village, "paper");
 }
 
+async function runPaper(): Promise<void> {
+  const market = new CoinbasePaperMarket();
+  const account = new PaperAccount();
+  const village = new Village({ market, brain: heuristicBrain(), paperAccount: account,
+    rng: mulberry32(42), blockingDecisions: true });
+  console.log("PAPER — Coinbase ETH quotes, 10 virtual ETH, heuristic bots, no wallet or API billing.");
+  console.log("Fee assumption: 60 bps per side. Model costs are estimates. Session is not persisted.");
+  const ticks = Number(env("TICKS", "0"));
+  if (!Number.isInteger(ticks) || ticks < 0) throw new Error("TICKS must be a nonnegative integer");
+  await market.refresh();
+  console.log(market.status());
+  let frame = 0;
+  for (;;) {
+    await village.step();
+    frame++;
+    if (frame % 600 === 0) {
+      await market.refresh();
+      report(village, "paper");
+      console.log(`  cash=${account.cashEth.toFixed(6)} virtual ETH`, market.status());
+    }
+    if (ticks > 0 && frame >= ticks) break;
+    await sleep(FRAME_MS);
+  }
+  report(village, "paper");
+  console.log(`  cash=${account.cashEth.toFixed(6)} virtual ETH`);
+}
+
 async function main(): Promise<void> {
   const mode = env("MODE", "sim").toLowerCase();
   if (mode === "live") {
     await runLive();
   } else if (mode === "paper") {
     await runPaper();
+  } else if (mode === "chain-demo") {
+    await runChainDemo();
   } else if (mode === "sim") {
     await runSim();
   } else {
-    console.error(`unknown MODE "${mode}" — expected "sim", "paper" or "live"`);
+    console.error(`unknown MODE "${mode}" — expected "sim", "paper", "chain-demo" or "live"`);
     process.exitCode = 1;
   }
 }

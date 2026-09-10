@@ -8,49 +8,31 @@
  */
 
 import React, { useMemo, useState } from "react";
-import { CLASS_COLOR, PALETTE, fmtEth, fmtUsd } from "./theme.js";
+import { PALETTE, fmtEth, fmtUsd } from "./theme.js";
 import {
   FORGE_STAT_BUDGET,
   MAX_STAT,
-  MODEL_LADDERS,
-  PROVIDERS,
   PROVIDER_META,
   STAT_KEYS,
   STAT_LABEL,
   compileConfig,
-  modelForPtn,
   type Stats,
 } from "../core/config.js";
-import type { Provider, StrategyParams } from "../core/types.js";
-import { DEFAULT_STRATEGY } from "../core/brain.js";
+import type { StrategyParams } from "../core/types.js";
 import {
   BACKTEST_SEED,
   BACKTEST_TICKS,
   backtestAgainstBaseline,
   type BacktestComparison,
 } from "../sim/backtest.js";
-import { CUSTOM_DEPLOY_COST, MAX_CUSTOM_AGENTS } from "../core/village.js";
+import { CUSTOM_DEPLOY_COST, MAX_CUSTOM_AGENTS } from "../core/economy.js";
 
-export interface ForgeDraft {
-  name: string;
-  stats: Stats;
-  strategy: StrategyParams;
-  systemSuffix: string;
-  /** Which house the build is wired to. Changes the model and the bill. */
-  provider: Provider;
-}
+import { BUILD_VERSION, MAX_SYSTEM_SUFFIX_LENGTH, STRATEGY_LIMITS, statsSpent, type ForgeDraft } from "../core/build.js";
+import { HousePicker, PRow, NumSlider, BtCell, EquityCurve } from "./ForgeWidgets.jsx";
+import { BuildImport } from "./BuildImport.jsx";
 
-export const EMPTY_DRAFT: ForgeDraft = {
-  name: "UNNAMED",
-  stats: { spd: 5, rsk: 5, ptn: 5, gas: 5 },
-  strategy: { ...DEFAULT_STRATEGY },
-  systemSuffix: "",
-  provider: "anthropic",
-};
-
-export function statsSpent(stats: Stats): number {
-  return STAT_KEYS.reduce((acc, k) => acc + stats[k], 0);
-}
+export { EMPTY_DRAFT, statsSpent, type ForgeDraft } from "../core/build.js";
+export { HousePicker, EquityCurve } from "./ForgeWidgets.jsx";
 
 export interface ForgeProps {
   draft: ForgeDraft;
@@ -64,8 +46,11 @@ export interface ForgeProps {
 
 export function Forge(props: ForgeProps): React.ReactElement {
   const { draft } = props;
-  const [result, setResult] = useState<BacktestComparison | null>(null);
+  const [completed, setCompleted] = useState<{ key: string; result: BacktestComparison } | null>(null);
+  const draftKey = JSON.stringify(draft);
+  const result = completed?.key === draftKey ? completed.result : null;
   const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const spent = statsSpent(draft.stats);
@@ -84,16 +69,17 @@ export function Forge(props: ForgeProps): React.ReactElement {
     const others = STAT_KEYS.filter((k) => k !== key).reduce((a, k) => a + draft.stats[k], 0);
     if (others + next > FORGE_STAT_BUDGET) return;
     props.onDraft({ ...draft, stats: { ...draft.stats, [key]: next } });
-    setResult(null);
+    setCompleted(null);
   }
 
   function setStrategy<K extends keyof StrategyParams>(key: K, value: StrategyParams[K]): void {
     props.onDraft({ ...draft, strategy: { ...draft.strategy, [key]: value } });
-    setResult(null);
+    setCompleted(null);
   }
 
   async function runBacktest(): Promise<void> {
     setRunning(true);
+    setError(null);
     try {
       /* The backtest is the seeded heuristic brain: it measures the BUILD, so
          it is identical across houses on purpose. The house shows up in the
@@ -105,7 +91,9 @@ export function Forge(props: ForgeProps): React.ReactElement {
         systemSuffix: draft.systemSuffix,
         provider: draft.provider,
       });
-      setResult(cmp);
+      setCompleted({ key: draftKey, result: cmp });
+    } catch {
+      setError("Backtest failed. Try running it again.");
     } finally {
       setRunning(false);
     }
@@ -113,7 +101,8 @@ export function Forge(props: ForgeProps): React.ReactElement {
 
   async function exportJson(): Promise<void> {
     const payload = {
-      name: draft.name,
+      version: BUILD_VERSION,
+      name: draft.name.trim() || "UNNAMED",
       provider: draft.provider,
       stats: draft.stats,
       strategy: draft.strategy,
@@ -190,15 +179,14 @@ export function Forge(props: ForgeProps): React.ReactElement {
             ptn={draft.stats.ptn}
             onChange={(pv) => {
               props.onDraft({ ...draft, provider: pv });
-              setResult(null);
+              setCompleted(null);
             }}
           />
 
           <div className="dv-compiled-title">STRATEGY</div>
           <NumSlider
             label="entryThreshold"
-            min={0.001}
-            max={0.06}
+            {...STRATEGY_LIMITS.entryThreshold}
             step={0.001}
             value={draft.strategy.entryThreshold}
             format={(v) => `${(v * 100).toFixed(1)}%`}
@@ -206,8 +194,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
           />
           <NumSlider
             label="maxCurve"
-            min={5}
-            max={100}
+            {...STRATEGY_LIMITS.maxCurve}
             step={1}
             value={draft.strategy.maxCurve}
             format={(v) => `${v.toFixed(0)}%`}
@@ -215,8 +202,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
           />
           <NumSlider
             label="holdMin"
-            min={10}
-            max={600}
+            {...STRATEGY_LIMITS.holdMin}
             step={5}
             value={draft.strategy.holdMin}
             format={(v) => `${v}t`}
@@ -224,8 +210,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
           />
           <NumSlider
             label="holdMax"
-            min={20}
-            max={1200}
+            {...STRATEGY_LIMITS.holdMax}
             step={10}
             value={draft.strategy.holdMax}
             format={(v) => `${v}t`}
@@ -233,8 +218,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
           />
           <NumSlider
             label="sizeMult"
-            min={0.2}
-            max={3}
+            {...STRATEGY_LIMITS.sizeMult}
             step={0.05}
             value={draft.strategy.sizeMult}
             format={(v) => `${v.toFixed(2)}x`}
@@ -253,10 +237,16 @@ export function Forge(props: ForgeProps): React.ReactElement {
           <textarea
             className="dv-input dv-textarea"
             rows={4}
+            maxLength={MAX_SYSTEM_SUFFIX_LENGTH}
             placeholder="Appended to the system prompt in MODE=live, whichever house. Ignored by the sim and by the backtest."
             value={draft.systemSuffix}
             onChange={(e) => props.onDraft({ ...draft, systemSuffix: e.target.value })}
           />
+          <BuildImport onImport={(next) => {
+            props.onDraft(next);
+            setCompleted(null);
+            setError(null);
+          }} />
         </section>
 
         <section className="dv-forge-col">
@@ -280,6 +270,7 @@ export function Forge(props: ForgeProps): React.ReactElement {
           <button className="dv-btn dv-btn-wide" disabled={running} onClick={runBacktest}>
             {running ? "RUNNING…" : "RUN BACKTEST"}
           </button>
+          {error && <div className="dv-empty" role="alert">{error}</div>}
 
           {result && (
             <>
@@ -378,161 +369,5 @@ export function Forge(props: ForgeProps): React.ReactElement {
         </section>
       </div>
     </div>
-  );
-}
-
-/**
- * The house picker. Every button states what it actually buys: the model id at
- * the agent's current PTN, and the frontier rung PTN 12 unlocks.
- */
-export function HousePicker({
-  value,
-  ptn,
-  onChange,
-}: {
-  value: Provider;
-  ptn: number;
-  onChange(p: Provider): void;
-}): React.ReactElement {
-  const meta = PROVIDER_META[value];
-  return (
-    <div className="dv-house">
-      <div className="dv-house-row">
-        {PROVIDERS.map((p) => {
-          const m = PROVIDER_META[p];
-          const on = p === value;
-          return (
-            <button
-              key={p}
-              className={`dv-btn dv-house-btn${on ? " dv-house-on" : ""}`}
-              style={on ? { borderColor: m.color, color: m.color } : undefined}
-              onClick={() => onChange(p)}
-            >
-              {m.label}
-            </button>
-          );
-        })}
-      </div>
-      <div className="dv-house-models">
-        {MODEL_LADDERS[value].map((rung) => (
-          <div className="dv-row" key={rung.id}>
-            <span className="dv-row-k">
-              PTN {rung.minPtn}
-              {ptn >= rung.minPtn ? " · active" : " · locked"}
-            </span>
-            <span
-              className="dv-row-v"
-              style={{ color: modelForPtn(ptn, value) === rung.id ? meta.color : undefined }}
-            >
-              {rung.id}
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="dv-house-note">{meta.note}</div>
-    </div>
-  );
-}
-
-function PRow({ k, v, accent }: { k: string; v: string; accent?: boolean }): React.ReactElement {
-  return (
-    <div className="dv-row">
-      <span className="dv-row-k">{k}</span>
-      <span className="dv-row-v" style={accent ? { color: PALETTE.accent } : undefined}>
-        {v}
-      </span>
-    </div>
-  );
-}
-
-function NumSlider({
-  label,
-  min,
-  max,
-  step,
-  value,
-  format,
-  onChange,
-}: {
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  format(v: number): string;
-  onChange(v: number): void;
-}): React.ReactElement {
-  return (
-    <label className="dv-slider">
-      <span className="dv-slider-label dv-slider-label-wide">{label}</span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-      />
-      <span className="dv-slider-value">{format(value)}</span>
-    </label>
-  );
-}
-
-function BtCell({
-  label,
-  a,
-  b,
-  good,
-}: {
-  label: string;
-  a: string;
-  b: string;
-  good: boolean;
-}): React.ReactElement {
-  return (
-    <div className="dv-bt-cell">
-      <div className="dv-bt-label">{label}</div>
-      <div className="dv-bt-a" style={{ color: good ? PALETTE.up : PALETTE.down }}>
-        {a}
-      </div>
-      <div className="dv-bt-b">vs {b}</div>
-    </div>
-  );
-}
-
-export function EquityCurve({
-  build,
-  baseline,
-}: {
-  build: readonly number[];
-  baseline: readonly number[];
-}): React.ReactElement {
-  const w = 480;
-  const h = 110;
-  const all = [...build, ...baseline];
-  const lo = Math.min(0, ...all);
-  const hi = Math.max(0, ...all);
-  const span = hi - lo || 1;
-
-  const path = (series: readonly number[]): string =>
-    series
-      .map((v, i) => {
-        const x = (i / Math.max(1, series.length - 1)) * (w - 8) + 4;
-        const y = h - 6 - ((v - lo) / span) * (h - 14);
-        return `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
-      })
-      .join(" ");
-
-  const zeroY = h - 6 - ((0 - lo) / span) * (h - 14);
-
-  return (
-    <svg className="dv-equity" viewBox={`0 0 ${w} ${h}`}>
-      <line x1={4} x2={w - 4} y1={zeroY} y2={zeroY} stroke="rgba(204,255,0,0.2)" strokeDasharray="4 4" />
-      <path d={path(baseline)} fill="none" stroke={CLASS_COLOR.SNIPER} strokeWidth={1.2} opacity={0.6} />
-      <path d={path(build)} fill="none" stroke={PALETTE.accent} strokeWidth={1.8} />
-      <text x={6} y={12} className="dv-chart-axis">
-        equity · build vs SNIPER preset
-      </text>
-    </svg>
   );
 }
