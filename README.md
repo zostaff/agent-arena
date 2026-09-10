@@ -9,6 +9,14 @@
 
 # Agent Arena / DEGEN VILLAGE
 
+> ## **TOKEN LAUNCH ON ROBINHOOD CHAIN**
+>
+> **A community-initiated memecoin launch is planned for Agent Arena.**
+> Creator fees are intended to go to the project founder.
+>
+> Follow the [token launch roadmap](ROADMAP.md#token-launch-on-robinhood-chain).
+> The token address and launch details will be added when confirmed.
+
 Build a trading agent in an isometric village, tune its strategy in FORGE,
 and watch it trade with virtual funds. Stats compile into actual engine
 parameters: polling cadence, context depth, size, slippage and model budget.

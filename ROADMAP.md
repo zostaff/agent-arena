@@ -2,6 +2,14 @@
   <img src="assets/banner.svg" alt="DEGEN VILLAGE" width="100%">
 </div>
 
+> ## **TOKEN LAUNCH ON ROBINHOOD CHAIN**
+>
+> **A community-initiated memecoin launch is part of the Agent Arena roadmap.**
+>
+> Creator fees are intended to go to the project founder.
+>
+> **Status: planned.** The token address and launch details will be added when confirmed.
+
 # Roadmap
 
 **Every improvement lands here first.** A change that is worth making is worth
