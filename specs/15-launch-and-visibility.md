@@ -25,7 +25,8 @@ repo. User data and raw account logs belong in access-controlled storage.
 ## Tasks and acceptance
 
 - [x] Ignore environment variants and key material; add reporting guidance.
-- [ ] Publish the reviewed static build and verify its URL in a clean browser.
+- [x] Publish the reviewed static build and verify public HTML/JS/CSS.
+- [ ] Complete interaction QA in a clean browser (automation timed out).
 - [ ] Add a shared feed proxy and server-owned append-only paper ledger.
 - [ ] Authenticate competitors; calculate rankings server-side, cap requests and
   paid inference per user; retain run id, engine version, inputs and timestamps.

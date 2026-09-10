@@ -1,7 +1,7 @@
 <div align="center">
 <img src="assets/banner.png" alt="DEGEN VILLAGE — Agent Arena" width="100%">
 
-**[Roadmap](ROADMAP.md) · [Specs](specs/README.md) · [Architecture](specs/12-architecture.md) · [Launch guide](docs/LAUNCH.md)**
+**[Try paper alpha](https://zostaff.github.io/agent-arena/?mode=PAPER) · [Roadmap](ROADMAP.md) · [Specs](specs/README.md) · [Architecture](specs/12-architecture.md) · [Launch guide](docs/LAUNCH.md)**
 
 [![ci](https://github.com/zostaff/agent-arena/actions/workflows/ci.yml/badge.svg)](https://github.com/zostaff/agent-arena/actions/workflows/ci.yml)
 
@@ -110,6 +110,12 @@ virtual balance/depth/freshness, outage recovery and historical fill attribution
 Published CI/deployment status is separate from these local checks.
 
 ## Hosted demo and production work
+
+The [public paper alpha](https://zostaff.github.io/agent-arena/?mode=PAPER) was
+deployed on 2026-09-11. CI and Pages passed for release `9f906e4`; the public
+HTML, JavaScript and CSS were checked against the local production build.
+Full interactive browser QA remains pending because browser automation timed out.
+
 
 GitHub Pages workflow builds the static UI. First select **Settings → Pages →
 Source: GitHub Actions**, then run `pages` manually. Set repository Actions

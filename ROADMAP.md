@@ -48,10 +48,37 @@ never of inventing something that merely sounds like progress. Each block ends
 with the honest limit, because an update that names its own gap is the one
 people believe.
 
-The committed baseline has **162 passing tests** and three modes: seeded sim,
-**paper on real chain tokens**, and live. Uncommitted implementation and its
-validation status are tracked separately below; historical release entries
-retain their original measurements.
+The current released alpha has **226 passing tests**. Historical entries below
+retain their original measurements; implementation-batch notes describe the
+validation performed before the release.
+
+### 2026-09-11 · Public paper alpha and illustrated roadmap — [`9f906e4`](https://github.com/zostaff/agent-arena/commit/9f906e4)
+
+**Try it:** [PAPER alpha](https://zostaff.github.io/agent-arena/?mode=PAPER).
+[CI](https://github.com/zostaff/agent-arena/actions/runs/34532512283) and
+[Pages deployment](https://github.com/zostaff/agent-arena/actions/runs/34532512239)
+completed successfully. The public JS/CSS match the checked local production build.
+
+**What changed.** Real Coinbase quotes, bounded virtual execution, isolated
+sessions, core/UI refactoring, validated build imports, English subsystem specs
+and an illustrated six-stage roadmap. **TOKEN LAUNCH ON ROBINHOOD CHAIN** is
+prominent as a planned milestone, with utility, vesting, treasury and audit gates.
+
+**For a post**
+
+* **226 passing tests across 15 files**, typecheck and Pages production build.
+* **180-second public-feed check:** 8,964 engine ticks, 15 fresh-market reports,
+  three stale LINK-ETH reports; the engine continued and the virtual ledger
+  reconciled on every tick. No strategy entry fired during that interval.
+* A separate **synthetic QA buy/sell** used a real SOL-ETH book: 0.01 virtual ETH
+  bought 0.2463054187 SOL. After spread and both 60 bps fees, the account held
+  9.9998726552 virtual ETH. No exchange order was submitted; this is execution
+  plumbing evidence, not strategy performance.
+* The public page returns HTTP 200, both production assets match, the roadmap
+  PNG is published, and the exchange response allows cross-origin reads.
+* **The honest limit:** full browser interaction QA is pending after automation
+  timeouts. The short feed check is not a 24-hour soak; Pons real prices, durable
+  server accounts, paid LLM verification and authoritative rankings remain planned.
 
 ### 2026-09-07 · Cold start fixed, and a router ABI that was wrong all along — [`ca97ddd`](https://github.com/zostaff/agent-arena/commit/ca97ddd)
 
@@ -257,7 +284,7 @@ stat bars on top, the config they compile to underneath.*
 
 ---
 
-## Implemented locally · 2026-09-08 · uncommitted
+## Implementation batch · 2026-09-08 · included in release 9f906e4
 
 ### 1. Domain boundaries and actionable specs
 
@@ -292,9 +319,9 @@ No cloud slot is implemented. Contract: [spec 13](specs/13-persistence.md).
 boundaries, hostile imports, atomic deployment refusal and historical house
 attribution. Typecheck, production build and `git diff --check` pass. Browser smoke testing remains pending because
 native browser automation disconnected before the page could be inspected.
-These changes have not been committed, pushed or deployed.
+These checks were performed before publication; the changes are now included in release `9f906e4`.
 
-## Implemented locally · 2026-09-10 · public paper alpha
+## Implementation batch · 2026-09-10 · included in release 9f906e4
 
 - Real Coinbase SOL-ETH/LINK-ETH/ADA-ETH book and candles, public read-only API.
 - Strict virtual account: 10 ETH, 60 bps fee assumption, quote-budget buys,
@@ -312,7 +339,7 @@ made decisions but no entry signal fired, so no live-feed fill was observed.
 Buy/sell arithmetic and outage/recovery are verified by deterministic tests.
 Chrome rendered the app and mode controls; the automation connection timed out
 after switching to PAPER, so full browser interaction/CORS QA remains incomplete.
-These changes are local, uncommitted, unpushed and undeployed.
+These were pre-release checks; the implementation is now published in release `9f906e4`.
 
 **For a post:** the demo now has a real-price paper path and a bounded virtual
 account. This is not Pons swap decoding, a production broker, paid LLM verification
@@ -402,18 +429,13 @@ codebase has to change — that one label is wired through the UI already.
 
 ---
 
-### 9. Finish the publish
+### 9. Public deployment — completed in release 9f906e4
 
 Owner: [spec 09](specs/09-tests.md), `.github/workflows/pages.yml`.
 
-`pages.yml` builds and is ready to deploy; the site itself still has to be
-created once in Settings → Pages (Source: GitHub Actions), because the Actions
-token is refused with `Resource not accessible by integration` when it tries to
-create it. Automatic Pages builds are now opt-in with `PAGES_ENABLED=true`; manual
-dispatch remains available after Pages is configured.
-
-**Done means:** Pages is configured, deployment succeeds for the reviewed
-release, and the verified public URL is in the README.
+Pages is enabled for GitHub Actions, `PAGES_ENABLED=true`, and the public URL
+is in the README. CI and deployment passed for `9f906e4`; public HTML, JS and CSS
+were verified. Keep the remaining interactive browser QA in the alpha checklist.
 
 ## Later
 

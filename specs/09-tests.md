@@ -81,3 +81,14 @@ include `paper.ts`. Typecheck and production build pass.
 Read-only CLI smoke: 120 ticks, all three Coinbase products fresh, feed `live`,
 no entry signal and therefore no fills. Chrome loaded the app; detailed PAPER
 browser QA was interrupted by the automation timeout and is still required.
+
+## Published alpha evidence · 2026-09-11
+
+Release `9f906e4`: 226 tests / 15 files, typecheck and production build; both
+GitHub CI and Pages succeeded. A 180-second real-feed check completed 8,964 ticks
+with ledger reconciliation: 15 healthy reports and three stale LINK-ETH reports.
+No strategy trade fired. A separate synthetic QA round trip used a real SOL-ETH
+book and reconciled both fees. Public HTML/JS/CSS and roadmap PNG were verified;
+Coinbase returned `access-control-allow-origin: *`. Full browser interaction QA
+and a 24-hour soak remain pending. `tests/mode.test.ts` covers direct mode links
+and storage-unavailable fallback.
