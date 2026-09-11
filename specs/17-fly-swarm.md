@@ -131,3 +131,20 @@ never claim this verifies an actual neural solver or live Pons pricing.
 - [ ] Complete verified Pons price ingestion under spec 11.
 - [ ] Measure performance on low-end/mobile hardware; visual density is intended
       primarily for the desktop trading room.
+
+## Visual refinement · 2026-09-11
+
+Six articulated legs use jointed segments and planted rear feet. One foreleg
+presses the same key the keyboard illuminates; the other grips a moving mouse.
+Mouse movement and monitor cursor share a pure tick/state-derived pose. Holding
+or deciding increases typing cadence. Four stations have different motion phases.
+The render adds tarsal claws, joint highlights, thorax/face bristles, segmented
+abdomen, wing venation, halteres, eyes and moving antennae. The room, peripherals,
+HUD and terminal use DEGEN VILLAGE warm black/olive/lime. Robinhood Chain branding
+is visual identity; explicit SIM, exchange and Pons provenance labels remain.
+No trading actions originate from these decorative input gestures.
+
+Validation for this refinement: 247 tests (20 fly checks), production build and
+SSR. Browser checks cover moving mouse/typing limbs, freeze on game pause,
+four workstations, automatic charts, roster trades, terminal and narrow layout.
+Static facet meshes are memoized; motion updates joint paths and transforms.

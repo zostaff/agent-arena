@@ -142,7 +142,7 @@ export function VillageScene(props: VillageSceneProps): React.ReactElement {
                 ? "dv-float dv-float-level"
                 : "dv-float";
           return (
-            <text key={n.id} style={n.text === "CONNECTOME ONLINE" ? { fill: "#5eead4" } : undefined} className={cls} x={x} y={y - 34} textAnchor="middle">
+            <text key={n.id} style={n.text === "CONNECTOME ONLINE" ? { fill: "#CCFF00" } : undefined} className={cls} x={x} y={y - 34} textAnchor="middle">
               {n.text}
             </text>
           );

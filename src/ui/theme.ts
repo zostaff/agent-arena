@@ -23,7 +23,7 @@ export const CLASS_COLOR: Record<AgentClass, string> = {
   WHALE: "#fbbf24",
   ARB: "#e879f9",
   CUSTOM: "#CCFF00",
-  FLY: "#5eead4",
+  FLY: "#CCFF00",
 };
 
 export const FONT = "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace";

@@ -1,6 +1,6 @@
 /** FlyWire reference metadata. This is not a downloaded connectome or neural solver. */
 export const FLY_PROVIDER = {
-  id: "connectome", label: "FLY", short: "CONNECTOME", color: "#5eead4",
+  id: "connectome", label: "FLY", short: "CONNECTOME", color: "#CCFF00",
   tagline: "139,255 neurons, zero dollars",
   bias: 0.0004, thresh: 0.85, noise: 1.9, sizeMult: 0.85, holdMult: 0.55,
   flip: 0.11, rugBlind: 0.40,

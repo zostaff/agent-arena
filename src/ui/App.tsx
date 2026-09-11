@@ -413,7 +413,7 @@ export function App(): React.ReactElement {
           <RivalStandings entries={board.villages} meId={villageId} />
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <button className="dv-btn hb" onClick={() => setOverlay("TERMINAL")}>▣ TERMINAL</button>
-            <button className="dv-btn hb" style={{ color: "#5eead4", borderColor: "#5eead455" }} onClick={() => setFlyOpen(true)}>🪰 FLY SWARM</button>
+            <button className="dv-btn hb" style={{ color: "#CCFF00", borderColor: "#CCFF0055" }} onClick={() => setFlyOpen(true)}>🪰 FLY SWARM</button>
           </div>
           <SpeedControls
             speed={mode === "PAPER" ? 1 : speed}

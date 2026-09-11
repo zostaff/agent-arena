@@ -355,6 +355,14 @@ or a server-authoritative competition. Token work is a roadmap/design milestone.
 
 ## Next up
 
+### 14. Detailed fly interaction and village palette
+
+Owner: [spec 17](specs/17-fly-swarm.md). Refine the four flies with six articulated
+legs, coordinated typing and mouse gestures, compound eyes, bristles and wing
+veins. Use warm black, olive and lime throughout the room and Robinhood Chain
+terminal styling. Drive every movement from the existing tick and agent state;
+keep the neural-model and market-provenance boundaries unchanged.
+
 ### 13. FLY SWARM — four workstations (2026-09-11)
 
 Owner: [spec 17](specs/17-fly-swarm.md). Add a hidden full-screen room reached by

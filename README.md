@@ -25,6 +25,9 @@ parameters: polling cadence, context depth, size, slippage and model budget.
 
 Click **🪰 FLY SWARM** beside TERMINAL, or type `fly` outside an input. Four
 faceted flies sit at separate monitors; choose a workstation to inspect it.
+Six articulated legs, moving antennae and wings, coordinated key presses and
+mouse/cursor gestures bring each desk to life in the village's warm black and
+lime palette. The monitors use Robinhood Chain terminal styling.
 **PUT THE SWARM ON THE ROSTER** adds FLY-00–03 once, without a deployment fee.
 Their ordinary engine trades appear in TERMINAL with zero inference spend.
 

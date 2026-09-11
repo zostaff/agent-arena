@@ -5,6 +5,9 @@ import { describe, expect, it, vi } from "vitest";
 import App from "../src/ui/App.js";
 import { FlyScene, MotorCommands, NeuralReplay } from "../src/ui/fly/FlyScene.js";
 import { AgentTerminal } from "../src/ui/fly/Terminal.js";
+import { flyMotion, keyPosition } from "../src/ui/fly/motion.js";
+import { FlyModel } from "../src/ui/fly/FlyModel.js";
+import { FlyChart } from "../src/ui/fly/FlyChart.js";
 import { polyBody } from "../src/ui/fly/mesh.js";
 import { chartData, CHANNEL_TICKS, flyNet, monitorCoin, neuralState, type CoinView } from "../src/ui/fly/state.js";
 import { FLY_PROVIDER, FLY_STATS } from "../src/core/fly.js";
@@ -211,5 +214,38 @@ describe("typed fly code", () => {
     expect(open).toHaveBeenCalledOnce();
     cleanup();
     expect(removeEventListener).toHaveBeenCalledWith(name, handler, options);
+  });
+});
+
+
+describe("coordinated fly input gestures", () => {
+  it("puts the typing foot on the illuminated key at contact", () => {
+    for (let tick = 0; tick < 240; tick++) {
+      const pose = flyMotion(tick);
+      if (!pose.pressed) continue;
+      const key = keyPosition(pose.key);
+      expect(pose.hand.x).toBeCloseTo(key.x, 10);
+      expect(pose.hand.y).toBeCloseTo(key.y + 2, 10);
+    }
+  });
+  it("moves without timers, is deterministic on pause, and separates swarm phases", () => {
+    expect(flyMotion(50)).toEqual(flyMotion(50));
+    expect(flyMotion(50).mouseX).not.toBe(flyMotion(70).mouseX);
+    expect(flyMotion(50).hand).not.toEqual(flyMotion(70).hand);
+    expect(flyMotion(50, undefined, 0)).not.toEqual(flyMotion(50, undefined, 1));
+    const v = session(); joinFlySwarm(v);
+    const agent = v.view().agents.find((a) => a.cls === "FLY")!;
+    agent.state = "DECIDE";
+    expect(flyMotion(50, agent).engaged).toBe(true);
+    expect(flyMotion(50, agent).key).not.toBe(flyMotion(50).key);
+  });
+  it("renders mouse and screen cursor from the same station pose", () => {
+    const pose = flyMotion(93, undefined, 2);
+    const fly = render(<FlyModel tick={93} station={2} />);
+    const monitor = render(<FlyChart tick={93} station={2} />);
+    expect(fly).toContain(`translate(${pose.mouseX.toFixed(2)} ${pose.mouseY.toFixed(2)})`);
+    expect(monitor).toContain(`translate(${pose.cursorX.toFixed(2)} ${pose.cursorY.toFixed(2)})`);
+    expect(monitor).toContain("ROBINHOOD CHAIN");
+    expect(fly + monitor).not.toMatch(/NaN|Infinity/);
   });
 });
