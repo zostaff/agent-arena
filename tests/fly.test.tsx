@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { createHash } from "node:crypto";
+import baseline from "./fixtures/pre-fly-seed42.json";
 import { describe, expect, it, vi } from "vitest";
 import App from "../src/ui/App.js";
 import { FlyScene, MotorCommands, NeuralReplay } from "../src/ui/fly/FlyScene.js";
@@ -29,6 +29,26 @@ function coin(pair: string, last = 1): CoinView {
 const noop = () => {};
 const render = (element: React.ReactElement) => renderToStaticMarkup(element);
 
+/** Snapshot captured from commit 7e4bd8d, before FLY existed. Transcendental
+ * math can differ in low floating-point bits between V8 platforms; do not use
+ * a cross-platform byte hash. All keys, strings, counters and actions stay exact.
+ */
+function expectReplay(actual: unknown, expected: unknown, path = "view"): void {
+  if (typeof expected === "number" && !Number.isInteger(expected)) {
+    expect(typeof actual, path).toBe("number");
+    expect(Math.abs((actual as number) - expected), path).toBeLessThanOrEqual(
+      Math.max(1e-14, Math.abs(expected) * 1e-12),
+    );
+  } else if (expected !== null && typeof expected === "object") {
+    expect(actual !== null && typeof actual === "object", path).toBe(true);
+    expect(Array.isArray(actual), path).toBe(Array.isArray(expected));
+    expect(Object.keys(actual as object), path).toEqual(Object.keys(expected));
+    for (const [key, value] of Object.entries(expected)) {
+      expectReplay((actual as Record<string, unknown>)[key], value, `${path}.${key}`);
+    }
+  } else expect(actual, path).toBe(expected);
+}
+
 describe("fly swarm runtime and integration", () => {
   it("evaluates the default application export and leaves the scene out of initial HTML", () => {
     const html = render(<App />);
@@ -37,11 +57,10 @@ describe("fly swarm runtime and integration", () => {
     expect(html).not.toContain("FLYTRADER");
     expect(html).not.toContain("Fly swarm trading room");
   });
-  it("preserves the exact pre-feature 4,000-tick seed-42 engine output", async () => {
+  it("preserves the pre-feature 4,000-tick seed-42 engine output across runtimes", async () => {
     const village = session();
     await village.run(4000);
-    const digest = createHash("sha256").update(JSON.stringify(village.view())).digest("hex");
-    expect(digest).toBe("5ce3018fff91a1d20a10bc05a927767eda33f39abc2db6585ab5e3adc3c66f58");
+    expectReplay(JSON.parse(JSON.stringify(village.view())), baseline);
   });
   it("uses the real zero pricing table after training and boosts; FORGE stays paid-only", () => {
     expect(FLY_PROVIDER.neurons).toBe(139255);

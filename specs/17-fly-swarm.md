@@ -96,9 +96,14 @@ coordinates, automatic rotation and coverage, position locks, dense vs sparse
 raster, motor direction, free idempotent deployment, zero bills after training,
 real trades for all four flies, restore without duplication and keyboard guards.
 
-A SHA-256 digest of the complete seed-42 `Village.view()` after 4,000 ticks was
-captured before this feature. The same digest must match byte-for-byte with the
-easter egg untouched. No decision, fill or tick implementation was changed.
+The complete seed-42 `Village.view()` after 4,000 ticks was captured from
+pre-feature commit `7e4bd8d`. On the reference Mac runtime, old and new output
+matched byte-for-byte (SHA-256
+`5ce3018fff91a1d20a10bc05a927767eda33f39abc2db6585ab5e3adc3c66f58`).
+The committed fixture checks all keys, strings, actions and integer counters
+exactly. Fractional numbers allow max(1e-14 absolute, 1e-12 relative) error so
+V8 floating-point differences between macOS and Linux do not invalidate the
+regression check. No decision, fill or tick implementation was changed.
 
 Browser acceptance: button, typed code, input exclusion, four workstations,
 automatic monitor change, join, station selection, terminal roster, close,
@@ -107,7 +112,9 @@ never claim this verifies an actual neural solver or live Pons pricing.
 
 ### Local evidence · 2026-09-11
 
-- Production build and default-export SSR passed.
+- Production build and default-export SSR passed. The initial CI run exposed
+  a platform-dependent byte-hash assertion; it was replaced with the original
+  pre-feature fixture and the explicit numeric tolerance above.
 - 244 tests passed across 16 files, including 17 fly integration/render checks.
 - Isolated headless Chrome at 1440×1000: both entry points, automatic channels,
   station selection, free join and eight-row terminal passed with no page errors.
