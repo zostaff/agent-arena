@@ -319,7 +319,7 @@ export function App(): React.ReactElement {
         <div className="dv-brand">
           <span className="dv-brand-mark">◆</span>
           <span className="dv-brand-name">DEGEN VILLAGE</span>
-          <span className="dv-brand-sub">agent-arena · paper trading</span>
+          <span className="dv-brand-sub">AI agents · paper trading</span>
         </div>
         <StatCards view={view} rank={myRank} />
         <div className="dv-top-actions">

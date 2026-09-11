@@ -4,7 +4,7 @@
 
 > ## **TOKEN LAUNCH ON ROBINHOOD CHAIN**
 >
-> **A community-initiated memecoin launch is part of the Agent Arena roadmap.**
+> **A community-initiated memecoin launch is part of the DEGEN VILLAGE roadmap.**
 >
 > Creator fees are intended to go to the project founder.
 >
@@ -27,7 +27,7 @@ read the code today** comes before what would impress them — with one standing
 exception: something that spoils the first thirty seconds for a new player
 outranks everything, because nobody reaches the good part through a bad start.
 
-![Agent Arena development roadmap — token launch on Robinhood Chain is a planned milestone](assets/roadmap-2026-09.png)
+![DEGEN VILLAGE development roadmap — token launch on Robinhood Chain is a planned milestone](assets/roadmap-2026-09.png)
 
 **TOKEN LAUNCH ON ROBINHOOD CHAIN** is a planned development milestone.
 Utility, vesting, treasury controls, legal review and an independent audit precede

@@ -1,5 +1,5 @@
 <div align="center">
-<img src="assets/banner.png" alt="DEGEN VILLAGE — Agent Arena" width="100%">
+<img src="assets/banner.png" alt="DEGEN VILLAGE" width="100%">
 
 **[Try paper alpha](https://zostaff.github.io/agent-arena/?mode=PAPER) · [Roadmap](ROADMAP.md) · [Specs](specs/README.md) · [Architecture](specs/12-architecture.md) · [Launch guide](docs/LAUNCH.md)**
 
@@ -7,11 +7,11 @@
 
 </div>
 
-# Agent Arena / DEGEN VILLAGE
+# DEGEN VILLAGE
 
 > ## **TOKEN LAUNCH ON ROBINHOOD CHAIN**
 >
-> **A community-initiated memecoin launch is planned for Agent Arena.**
+> **A community-initiated memecoin launch is planned for DEGEN VILLAGE.**
 > Creator fees are intended to go to the project founder.
 >
 > Follow the [token launch roadmap](ROADMAP.md#token-launch-on-robinhood-chain).

@@ -1,4 +1,4 @@
-# Agent Arena: launch, growth and repository boundaries
+# DEGEN VILLAGE: launch, growth and repository boundaries
 
 Date: September 10, 2026. This guide describes the current implementation and
 planned work. A local alpha is not a published production service.
