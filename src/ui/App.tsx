@@ -40,13 +40,17 @@ import {
   type Me,
 } from "./storage.js";
 import { useMarketSession, storedMode, MODE_KEY, type MarketMode } from "./useMarketSession.js";
+import { FlyScene } from "./fly/FlyScene.js";
+import { AgentTerminal } from "./fly/Terminal.js";
+import { joinFlySwarm } from "../fly/roster.js";
+import { attachFlyShortcut } from "../fly/shortcut.js";
 import type { BacktestComparison } from "../sim/backtest.js";
 
 
 /** Ticks between autosaves. At 2x speed that is roughly every four seconds. */
 const AUTOSAVE_EVERY_TICKS = 240;
 
-type Overlay = "NONE" | "DEX" | "FORGE" | "BOARD";
+type Overlay = "NONE" | "DEX" | "FORGE" | "BOARD" | "TERMINAL";
 
 export function App(): React.ReactElement {
   const [mode] = useState<MarketMode>(storedMode);
@@ -65,6 +69,9 @@ export function App(): React.ReactElement {
   }, []);
 
   const [view, setView] = useState<VillageView>(() => village.view());
+  const [flyOpen, setFlyOpen] = useState(false);
+  const flyBuffer = useRef("");
+  useEffect(() => attachFlyShortcut(window, flyBuffer, () => setFlyOpen(true)), []);
   const [speed, setSpeed] = useState(2);
   const [paused, setPaused] = useState(false);
   const [overlay, setOverlay] = useState<Overlay>("NONE");
@@ -223,6 +230,13 @@ export function App(): React.ReactElement {
     },
     [village, flash],
   );
+
+  const onJoinSwarm = useCallback(() => {
+    const [fly] = joinFlySwarm(village);
+    setSelectedAgent(fly.id);
+    setOverlay("NONE");
+    setView(village.view());
+  }, [village]);
 
   const onPublishBuild = useCallback(
     async (d: ForgeDraft, result: BacktestComparison) => {
@@ -397,6 +411,10 @@ export function App(): React.ReactElement {
 
         <div className="dv-bottom-right">
           <RivalStandings entries={board.villages} meId={villageId} />
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button className="dv-btn hb" onClick={() => setOverlay("TERMINAL")}>▣ TERMINAL</button>
+            <button className="dv-btn hb" style={{ color: "#5eead4", borderColor: "#5eead455" }} onClick={() => setFlyOpen(true)}>🪰 FLY SWARM</button>
+          </div>
           <SpeedControls
             speed={mode === "PAPER" ? 1 : speed}
             paused={paused}
@@ -423,7 +441,7 @@ export function App(): React.ReactElement {
             draft={draft}
             onDraft={setDraft}
             treasury={view.treasury}
-            customCount={view.agents.filter((a) => a.custom).length}
+            customCount={view.agents.filter((a) => a.custom && a.cls !== "FLY").length}
             onDeploy={onDeploy}
             onPublish={(d, r) => void onPublishBuild(d, r)}
             onClose={() => setOverlay("NONE")}
@@ -440,8 +458,12 @@ export function App(): React.ReactElement {
           />
         )}
 
+        {overlay === "TERMINAL" && <AgentTerminal ui={view} onClose={() => setOverlay("NONE")} />}
+        {flyOpen && <FlyScene ui={view} mode={mode} onClose={() => setFlyOpen(false)} onJoin={onJoinSwarm} />}
         {toast && <div className="dv-toast">{toast}</div>}
       </main>
     </div>
   );
 }
+
+export default App;

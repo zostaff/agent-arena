@@ -95,6 +95,7 @@ export const CLASS_PRIORITY: Readonly<Record<AgentClass, readonly StatKey[]>> =
     SNIPER: ["ptn", "gas", "spd", "rsk"],
     WHALE: ["rsk", "ptn", "gas", "spd"],
     ARB: ["spd", "gas", "rsk", "ptn"],
+    FLY: ["spd", "gas", "rsk", "ptn"],
     CUSTOM: ["ptn", "spd", "rsk", "gas"],
   });
 

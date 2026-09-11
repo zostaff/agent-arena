@@ -141,6 +141,7 @@ export function defaultRoster(): AgentInit[] {
     SNIPER: { spd: 1, rsk: 2, ptn: 4, gas: 2 },
     WHALE: { spd: 1, rsk: 5, ptn: 2, gas: 1 },
     ARB: { spd: 5, rsk: 1, ptn: 1, gas: 3 },
+    FLY: { spd: 9, rsk: 7, ptn: 2, gas: 8 },
     CUSTOM: { spd: 0, rsk: 0, ptn: 0, gas: 0 },
   };
   return classes.map((cls, i) => ({
@@ -320,7 +321,7 @@ export class Village {
   }
 
   get customCount(): number {
-    return this.agents.filter((a) => a.custom).length;
+    return this.agents.filter((a) => a.custom && a.cls !== "FLY").length;
   }
 
   /** DEPLOY from FORGE. Costs 150 coins, capped at 4 custom agents. */

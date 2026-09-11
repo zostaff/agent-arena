@@ -355,6 +355,17 @@ or a server-authoritative competition. Token work is a roadmap/design milestone.
 
 ## Next up
 
+### 13. FLY SWARM — four workstations (2026-09-11)
+
+Owner: [spec 17](specs/17-fly-swarm.md). Add a hidden full-screen room reached by
+**🪰 FLY SWARM** or typed `fly`, four SVG flies at separate trading desks, rotating
+session charts, position locks, P&L-driven telemetry and a zero-inference-cost
+roster. Preserve the existing engine and paid FORGE picker. Label FlyWire as a
+reference: a working neural solver and live Pons swap prices remain separate
+uncompleted integrations. The interface and heuristic roster are implemented:
+244 tests, production build, default-export SSR and isolated desktop/mobile
+Chrome checks passed. Real Pons quotes and a real neural runtime remain next.
+
 ### 10. Public paper alpha — real quotes, virtual funds (2026-09-10)
 
 Owner: [spec 14](specs/14-public-paper-alpha.md). Add a public Coinbase

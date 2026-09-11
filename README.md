@@ -21,6 +21,21 @@ Build a trading agent in an isometric village, tune its strategy in FORGE,
 and watch it trade with virtual funds. Stats compile into actual engine
 parameters: polling cadence, context depth, size, slippage and model budget.
 
+## Fly swarm
+
+Click **🪰 FLY SWARM** beside TERMINAL, or type `fly` outside an input. Four
+faceted flies sit at separate monitors; choose a workstation to inspect it.
+**PUT THE SWARM ON THE ROSTER** adds FLY-00–03 once, without a deployment fee.
+Their ordinary engine trades appear in TERMINAL with zero inference spend.
+
+The room follows your current market mode. CHAIN has Pons identities with
+simulated prices; PAPER has real Coinbase quotes and virtual funds. The flies
+use the existing local heuristic. FlyWire anatomy is reference metadata and
+neural activity is a labelled P&L-driven visualization, not a running connectome.
+Implementation and remaining integrations: [spec 17](specs/17-fly-swarm.md).
+
+![FLY SWARM — four workstations, actual SIM position and modelled telemetry](assets/fly-swarm.png)
+
 ## Try locally
 
 Node.js 20+ (CI uses 22):

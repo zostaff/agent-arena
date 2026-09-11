@@ -10,9 +10,9 @@ export type Action = "BUY" | "SELL" | "SKIP";
  * cosmetic label: it selects the ladder in config.ts and the wire adapter in
  * src/live. See specs/04-live.md.
  */
-export type Provider = "anthropic" | "openai" | "xai";
+export type Provider = "anthropic" | "openai" | "xai" | "connectome";
 
-export type AgentClass = "SCOUT" | "SNIPER" | "WHALE" | "ARB" | "CUSTOM";
+export type AgentClass = "SCOUT" | "SNIPER" | "WHALE" | "ARB" | "CUSTOM" | "FLY";
 
 export type AgentState =
   | "REST"

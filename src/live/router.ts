@@ -11,6 +11,7 @@
  */
 
 import type { Brain, BrainOpts, Provider, Snapshot, Verdict } from "../core/types.js";
+import { heuristicBrain } from "../sim/brain.js";
 import { normalizeProvider } from "../core/config.js";
 import { claudeBrain, type ClaudeBrainOptions } from "./brain.js";
 import { grokBrain, openaiBrain, type WireBrainOptions } from "./providers.js";
@@ -26,6 +27,7 @@ export interface LiveBrainOptions {
 export function liveBrain(options: LiveBrainOptions = {}): Brain {
   const shared = options.shared ?? {};
   const brains: Record<Provider, Brain> = {
+    connectome: heuristicBrain(),
     anthropic: claudeBrain({ ...shared, ...options.anthropic }),
     openai: openaiBrain({ ...shared, ...options.openai }),
     xai: grokBrain({ ...shared, ...options.xai }),

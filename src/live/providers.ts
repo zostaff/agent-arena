@@ -395,6 +395,7 @@ export function grokBrain(options: WireBrainOptions = {}): Brain {
 
 /** Endpoint each house is actually posted to, for the DEX overlay. */
 export const HOUSE_ENDPOINT: Readonly<Record<Provider, string>> = Object.freeze({
+  connectome: PROVIDER_META.connectome.endpoint,
   anthropic: PROVIDER_META.anthropic.endpoint,
   openai: OPENAI_URL,
   xai: XAI_URL,

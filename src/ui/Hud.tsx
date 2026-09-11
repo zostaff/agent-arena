@@ -235,7 +235,7 @@ export function AgentInspector({
         <Row k="costPerDecision" v={fmtUsd(cfg.costPerDecision)} />
       </div>
 
-      {onRewire && (
+      {onRewire && agent.cls !== "FLY" && (
         <div className="dv-compiled">
           <div className="dv-compiled-title">REWIRE · {REWIRE_COST} coins</div>
           <div className="dv-house-row">

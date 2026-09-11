@@ -12,6 +12,7 @@
  * price of every decision, and which parameters the request may legally carry.
  */
 
+import { FLY_PROVIDER } from "./fly.js";
 import type { Provider } from "./types.js";
 
 /** Stat ceiling. Training and level-ups clamp here. */
@@ -51,6 +52,7 @@ export interface ModelRung {
  */
 export const MODEL_LADDERS: Readonly<Record<Provider, readonly ModelRung[]>> =
   Object.freeze({
+    connectome: FLY_PROVIDER.ladder,
     anthropic: Object.freeze([
       { minPtn: 0, id: "claude-opus-5" },
       { minPtn: 12, id: "claude-fable-5-1" },
@@ -95,6 +97,11 @@ export interface ProviderMeta {
 
 export const PROVIDER_META: Readonly<Record<Provider, ProviderMeta>> =
   Object.freeze({
+    connectome: {
+      id: "connectome", label: "FLY", endpoint: "local", effortField: "none",
+      sampling: false, envKey: "", color: FLY_PROVIDER.color,
+      note: "FlyWire-inspired local heuristic. No neural solver or API billing.",
+    },
     anthropic: {
       id: "anthropic",
       label: "ANTHROPIC",
@@ -128,7 +135,7 @@ export const PROVIDER_META: Readonly<Record<Provider, ProviderMeta>> =
   });
 
 export function isProvider(v: unknown): v is Provider {
-  return typeof v === "string" && (PROVIDERS as readonly string[]).includes(v);
+  return v === "connectome" || (typeof v === "string" && (PROVIDERS as readonly string[]).includes(v));
 }
 
 export function normalizeProvider(v: unknown): Provider {
@@ -144,6 +151,10 @@ export interface ModelPricing {
 
 export const MODEL_PRICING: Readonly<Record<string, ModelPricing>> =
   Object.freeze({
+    "flywire-783": {
+      inputPerMTok: FLY_PROVIDER.price["flywire-783"].in,
+      outputPerMTok: FLY_PROVIDER.price["flywire-783"].out,
+    },
     "claude-opus-5": { inputPerMTok: 5, outputPerMTok: 25 },
     "claude-fable-5-1": { inputPerMTok: 10, outputPerMTok: 50 },
     "gpt-5.6-terra": { inputPerMTok: 2, outputPerMTok: 12 },
@@ -251,6 +262,7 @@ export function modelForPtn(
 
 /** The house an arbitrary model id belongs to, or the default if unknown. */
 export function providerForModel(model: string): Provider {
+  if (model === FLY_PROVIDER.ladder[0].id) return "connectome";
   for (const p of PROVIDERS) {
     if (MODEL_LADDERS[p].some((r) => r.id === model)) return p;
   }
@@ -363,6 +375,11 @@ export function compileConfig(
   }
   if (set.has("zeroGas")) {
     feeBps = 0;
+  }
+
+  if (provider === "connectome") {
+    ctxCandles = 24;
+    thinkingBudget = 0;
   }
 
   return {

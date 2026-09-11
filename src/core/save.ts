@@ -52,7 +52,7 @@ function str(v: unknown, fallback = ""): string {
   return typeof v === "string" ? v : fallback;
 }
 
-const CLASS_SET = new Set<AgentClass>(["SCOUT", "SNIPER", "WHALE", "ARB", "CUSTOM"]);
+const CLASS_SET = new Set<AgentClass>(["SCOUT", "SNIPER", "WHALE", "ARB", "CUSTOM", "FLY"]);
 const BOOST_SET = new Set<BoostKind>(["overclock", "alphaFeed", "leverage", "zeroGas"]);
 const BUILDING_SET = new Set<BuildingId>(BUILDING_DEFS.map((d) => d.id));
 

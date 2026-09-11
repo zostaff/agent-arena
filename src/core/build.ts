@@ -98,7 +98,7 @@ export function parseBuild(input: unknown): BuildParseResult {
       stats,
       strategy,
       systemSuffix,
-      provider: normalizeProvider(input.provider),
+      provider: normalizeProvider(input.provider === "connectome" ? undefined : input.provider),
     },
   };
 }

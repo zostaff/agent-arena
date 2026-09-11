@@ -20,6 +20,7 @@ export const CLASS_LENS: Readonly<Record<AgentClass, string>> = Object.freeze({
   WHALE:
     "You favour size on high conviction only. Curve above 40% is your zone.",
   ARB: "You favour short holds and small edges. Exit fast.",
+  FLY: "Local FlyWire-inspired heuristic; short holds and small positions.",
   CUSTOM: "You follow the operator's brief below and nothing else.",
 });
 
@@ -66,6 +67,7 @@ export const CLASS_STRATEGY: Readonly<Record<AgentClass, StrategyParams>> =
       sizeMult: 0.7,
       requireBookAlign: false,
     },
+    FLY: { ...DEFAULT_STRATEGY, entryThreshold: 0.003, holdMin: 10, holdMax: 22, sizeMult: 0.2 },
     CUSTOM: { ...DEFAULT_STRATEGY },
   });
 
