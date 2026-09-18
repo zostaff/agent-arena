@@ -2,11 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 /**
- * GITHUB_PAGES switches the base path to the project-pages sub-path. Set only
- * by .github/workflows/pages.yml; a local build stays at the root so `npm run
- * preview` and a file:// open both behave.
+ * Pages serves the village from its own domain (public/CNAME →
+ * degenvillage.se), so the bundle lives at the root everywhere: locally, in
+ * `npm run preview` and in the published build.
  */
-const base = process.env.GITHUB_PAGES ? "/agent-arena/" : "/";
+const base = "/";
 
 export default defineConfig({
   base,

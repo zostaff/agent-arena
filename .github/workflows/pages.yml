@@ -37,7 +37,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-      # GITHUB_PAGES switches vite's base to /agent-arena/ for project pages.
+      # The custom domain in public/CNAME serves the bundle from the root.
       - run: npm run build
         env:
           GITHUB_PAGES: "1"
