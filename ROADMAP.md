@@ -63,9 +63,32 @@ never of inventing something that merely sounds like progress. Each block ends
 with the honest limit, because an update that names its own gap is the one
 people believe.
 
-The current released alpha has **226 passing tests**. Historical entries below
+The current released alpha has **302 passing tests**. Historical entries below
 retain their original measurements; implementation-batch notes describe the
 validation performed before the release.
+
+### 2026-09-18 · FROG RADAR, SPIDER, First Residents preview and degenvillage.se — [`af1a962`](https://github.com/zostaff/agent-arena/commit/af1a962)
+
+**Try it:** [degenvillage.se](https://degenvillage.se/?mode=PAPER). Type `frog`,
+`spider`, or open **MINT** from the header.
+
+**What changed.** Items 15–19 from *Next up* leave the local build: FROG RADAR
+(three read-only pattern watchers), SPIDER (wallet/token web, demo copy ledger,
+public-RPC transfer reader), First Residents (30 on-chain fly and frog portraits,
+bot PFP skins) and one black/lime visual identity. The village moved to its own
+domain in [`2b7de32`](https://github.com/zostaff/agent-arena/commit/2b7de32).
+
+**For a post**
+
+* **302 passing tests across 21 files**, typecheck and production build, run on a
+  clean checkout of `af1a962` before the push.
+* **30 residents, 15 flies and 15 frogs:** mint price 0 ETH, the minter pays gas,
+  one mint per address, artwork and metadata fully on-chain.
+* **SPIDER watches up to 12 public addresses** and verifies chain identity,
+  headers and receipts before showing a transfer.
+* **The honest limit:** the NFT contract is not deployed, so MINT is a preview.
+  SPIDER does not label buys or sells and does not execute copies with real
+  funds. FROG RADAR only observes; it places no trades.
 
 ### 2026-09-11 · Public paper alpha and illustrated roadmap — [`9f906e4`](https://github.com/zostaff/agent-arena/commit/9f906e4)
 
@@ -362,7 +385,7 @@ or a server-authoritative competition. Token work is a roadmap/design milestone.
 
 ## Next up
 
-### 19. SPIDER — wallet intelligence web
+### 19. SPIDER — wallet intelligence web — released in `af1a962`
 
 Owner: [spec 21](specs/21-spider-web.md). Add a SPIDER room with a projected 3D
 spider crawling along a wallet/token web. Support an explicit public-address
@@ -378,7 +401,7 @@ motion, pause, reduced motion, selection, watchlists, errors and cleanup.
 302 tests across 21 files, typecheck and production build pass. Real wallet
 profitability, swap attribution and automatic signed entries remain open.
 
-### 18. One visual identity across the village
+### 18. One visual identity across the village — released in `af1a962`
 
 Follow-up: make MINT the game-header entry to the collection. Redraw the 30
 residents as original black/lime mascot emblems inspired by the owner's logo:
@@ -393,7 +416,7 @@ Owners: specs 18–20. Implemented locally, including shared UI tokens and
 regenerated portraits. Desktop/mobile collection, wardrobe and radar checks
 pass; 287 tests, typecheck and production build validate the local release.
 
-### 17. Mineable residents, bot PFP skins and OpenSea resale
+### 17. Mineable residents, bot PFP skins and OpenSea resale — PFP skins released in `af1a962`; mining and resale still planned
 
 Owner: [spec 20](specs/20-mining-and-bot-skins.md). Make First Residents and a
 future mined collection equipable as cosmetic avatars in bot profiles. Verify
@@ -418,7 +441,7 @@ and mobile browser checks pass with an isolated wallet/RPC fixture; 287 tests
 across 20 files, typecheck and production build pass. Mining and marketplace
 indexing/listing remain planned. The independently edited terminal is untouched.
 
-### 16. First Residents — 30 free collectible NFTs on Robinhood Chain
+### 16. First Residents — 30 free collectible NFTs on Robinhood Chain — released in `af1a962`
 
 Owner: [spec 19](specs/19-residents-nft.md). Release a promotional collection of
 30 DEGEN VILLAGE residents: 15 flies and 15 frogs. Mint price is permanently
@@ -433,7 +456,7 @@ and wallet/RPC fixture checks pass. An unsigned mainnet creation estimate and a
 local browser-wallet deployment tool are ready. No deployed collection address
 or public mint is announced until deployment and verification are recorded.
 
-### 15. FROG RADAR — the hidden signal pond
+### 15. FROG RADAR — the hidden signal pond — released in `af1a962`
 
 Owner: [spec 18](specs/18-frog-radar.md). Type `frog` or tap the small lily-pad
 button to discover three pattern watchers: closed-candle volume spikes, range

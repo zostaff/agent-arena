@@ -1,7 +1,7 @@
 <div align="center">
 <img src="assets/banner.png" alt="DEGEN VILLAGE" width="100%">
 
-**[Try paper alpha](https://zostaff.github.io/agent-arena/?mode=PAPER) · [Roadmap](ROADMAP.md) · [Specs](specs/README.md) · [Architecture](specs/12-architecture.md) · [Launch guide](docs/LAUNCH.md)**
+**[Try paper alpha](https://degenvillage.se/?mode=PAPER) · [Roadmap](ROADMAP.md) · [Specs](specs/README.md) · [Architecture](specs/12-architecture.md) · [Launch guide](docs/LAUNCH.md)**
 
 [![ci](https://github.com/zostaff/agent-arena/actions/workflows/ci.yml/badge.svg)](https://github.com/zostaff/agent-arena/actions/workflows/ci.yml)
 
@@ -192,8 +192,9 @@ Published CI/deployment status is separate from these local checks.
 
 ## Hosted demo and production work
 
-The [public paper alpha](https://zostaff.github.io/agent-arena/?mode=PAPER) was
-deployed on 2026-09-11. CI and Pages passed for release `9f906e4`; the public
+The [public paper alpha](https://degenvillage.se/?mode=PAPER) was
+deployed on 2026-09-11 and moved to its own domain, `degenvillage.se`, on
+2026-09-18; the old `zostaff.github.io/agent-arena/` link redirects there. CI and Pages passed for release `9f906e4`; the public
 HTML, JavaScript and CSS were checked against the local production build.
 Full interactive browser QA remains pending because browser automation timed out.
 

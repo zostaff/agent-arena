@@ -42,8 +42,9 @@ strategies may remain flat until an entry signal appears.
 1. **Publish the demo.** In GitHub, select Settings → Pages → Build and deployment
    → Source: GitHub Actions, then manually run the `pages` workflow. Set the
    repository variable `PAGES_ENABLED=true` to enable automatic deployments.
-   The expected URL is `https://zostaff.github.io/agent-arena/`; verify a successful
-   deployment before advertising it as a working link.
+   The site is served at `https://degenvillage.se/` (DNS at one.com: four A
+   records to GitHub Pages, `www` CNAME to `zostaff.github.io`; the domain is in
+   `public/CNAME`). Verify a successful deployment before advertising the link.
 2. **Run a 20–30-person pilot.** Explain the three modes, display feed health,
    provide a short FORGE walkthrough and collect feedback. Check Coinbase access
    from target regions, browser CORS behavior and data usage/redistribution terms.
