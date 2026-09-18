@@ -441,7 +441,7 @@ and mobile browser checks pass with an isolated wallet/RPC fixture; 287 tests
 across 20 files, typecheck and production build pass. Mining and marketplace
 indexing/listing remain planned. The independently edited terminal is untouched.
 
-### 16. First Residents — 30 free collectible NFTs on Robinhood Chain — released in `af1a962`
+### 16. First Residents — 30 free collectible NFTs on Robinhood Chain — gallery preview released in `af1a962`; contract not deployed
 
 Owner: [spec 19](specs/19-residents-nft.md). Release a promotional collection of
 30 DEGEN VILLAGE residents: 15 flies and 15 frogs. Mint price is permanently
