@@ -6,6 +6,7 @@ dist/
 .DS_Store
 .vite/
 coverage/
+artifacts/nft/
 tsconfig.tsbuildinfo
 
 # All local environment variants; the tracked template stays public.

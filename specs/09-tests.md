@@ -92,3 +92,37 @@ book and reconciled both fees. Public HTML/JS/CSS and roadmap PNG were verified;
 Coinbase returned `access-control-allow-origin: *`. Full browser interaction QA
 and a 24-hour soak remain pending. `tests/mode.test.ts` covers direct mode links
 and storage-unavailable fallback.
+
+## Frog radar and NFT collection · 2026-09-12
+
+278 tests across 19 files pass. Frog detection, closed/forming candle handling,
+stale data, keyboard entry and SVG rendering have 16 tests. Four NFT contract
+tests compile Solidity and execute actual EVM calls, checking all 30 minted
+artworks against gallery files, supply cap, lifetime claims, transfers and
+receiver reentrancy/rejection. Eleven browser mint/SSR tests check runtime/chain
+verification, eligibility, account/network changes, zero-value submission,
+receipt validation and wallet rejection. Typecheck and production build pass.
+
+Isolated Chrome verifies frog desktop/mobile interaction and collection gallery
+layout, plus the mint UI against a fixture wallet and RPC. These checks are not
+on-chain deployment evidence or a new public release. See specs 18 and 19.
+
+## Bot PFP skins · 2026-09-12
+
+287 tests across 20 files pass, together with typecheck and production build.
+Nine additional skin tests cover versioned storage, supported collections,
+ownership/account checks, RPC failure and reset. Contract tests also verify
+all cropped PFP previews and cosmetic metadata against actual token output.
+Chrome checks cover owned-token selection, avatar persistence, read-only reload
+verification, mobile layout, reset and transfer revocation. The local deployment
+page passes fixture-wallet checks for explicit connection, fresh gas estimation,
+one zero-value creation request and receipt handoff. No real transaction was sent.
+
+## SPIDER · 2026-09-12
+
+302 tests across 21 files, typecheck and production build pass. Fifteen additional
+tests cover wallet validation, transfer evidence, canonical receipts, reorgs,
+bounded cursor recovery, shared-flow clustering and virtual copy accounting.
+Desktop/mobile Chrome checks pass for the projected 3D spider, motion controls,
+copy demo, node selection, live-reader fixture, visible RPC errors and teardown.
+Actual smart-wallet ranking and automatic on-chain execution remain unverified.

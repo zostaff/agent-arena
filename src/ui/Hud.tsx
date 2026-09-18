@@ -28,6 +28,7 @@ import {
 import type { VillageView } from "../core/village.js";
 import type { Provider } from "../core/types.js";
 import type { VillageEntry } from "./storage.js";
+import { BotAvatar } from "./nft/BotAvatar.js";
 
 export interface StatCardsProps {
   view: VillageView;
@@ -208,6 +209,7 @@ export function AgentInspector({
 
   return (
     <div className="dv-panel dv-inspector">
+      <BotAvatar key={agent.id} agentId={agent.id} name={agent.name} editable />
       <div className="dv-panel-head">
         <span style={{ color }}>{agent.name}</span>
         <span className="dv-panel-sub">

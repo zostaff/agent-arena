@@ -15,5 +15,5 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "tests", "scripts/nft/**/*.ts", "vite.config.ts", "vitest.config.ts"]
 }

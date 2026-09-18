@@ -26,6 +26,10 @@ are evidence from their stated dates, not a claim of current verification.
 | [15 — Launch and visibility](15-launch-and-visibility.md) | Public demo, private service boundary, growth | Pilot and server-verified competitions |
 | [16 — Development token](16-development-token.md) | Utility, economics, review and launch gates | Design only; no issuance |
 | [17 — Fly swarm](17-fly-swarm.md) | Hidden four-agent room, SVG flies, tick-driven monitors and telemetry | Zero-cost roster, unchanged baseline; real neural solver and Pons quotes remain open |
+| [18 — Frog radar](18-frog-radar.md) | Hidden signal pond and pattern detectors | Closed-candle signals, fresh books, desktop/mobile observation room |
+| [19 — First Residents](19-residents-nft.md) | 30 free ERC-721 collectibles, on-chain artwork, wallet mint | Verified contract and receipt; actual deployment still pending |
+| [20 — Mining and bot skins](20-mining-and-bot-skins.md) | NFT bot PFPs, future mineable series and OpenSea resale | Owned-skin profiles; miner and marketplace listing remain planned |
+| [21 — SPIDER](21-spider-web.md) | Projected 3D spider, wallet watchlist, shared-flow clusters and virtual copy desk | Read-only transfer evidence; real swap execution remains unconnected |
 
 ## Working agreement
 

@@ -44,6 +44,9 @@ import { FlyScene } from "./fly/FlyScene.js";
 import { AgentTerminal } from "./fly/Terminal.js";
 import { joinFlySwarm } from "../fly/roster.js";
 import { attachFlyShortcut } from "../fly/shortcut.js";
+import { FrogEasterEgg } from "./frog/FrogRadar.js";
+import { CollectionEntry } from "./nft/CollectionEntry.js";
+import { SpiderEntry } from "./spider/SpiderEntry.js";
 import type { BacktestComparison } from "../sim/backtest.js";
 
 
@@ -346,6 +349,8 @@ export function App(): React.ReactElement {
           <button className={`dv-btn${overlay === "BOARD" ? " dv-btn-on" : ""}`} onClick={() => setOverlay(overlay === "BOARD" ? "NONE" : "BOARD")}>
             BOARD
           </button>
+          <CollectionEntry />
+          <SpiderEntry />
           <div className="dv-mode">
             {(["SIM", "CHAIN", "PAPER"] as const).map((m) => (
               <button
@@ -460,6 +465,7 @@ export function App(): React.ReactElement {
 
         {overlay === "TERMINAL" && <AgentTerminal ui={view} onClose={() => setOverlay("NONE")} />}
         {flyOpen && <FlyScene ui={view} mode={mode} onClose={() => setFlyOpen(false)} onJoin={onJoinSwarm} />}
+        <FrogEasterEgg ui={view} mode={mode} />
         {toast && <div className="dv-toast">{toast}</div>}
       </main>
     </div>

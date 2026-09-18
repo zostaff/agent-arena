@@ -1,0 +1,80 @@
+/* Shared DEGEN VILLAGE palette and typography. */
+.nft-room{position:fixed;inset:0;z-index:1300;background:var(--bg-deep);color:var(--ink);overflow:auto;overscroll-behavior:contain;font:12px/1.6 var(--mono);color-scheme:dark}
+.nft-room *{box-sizing:border-box}
+.nft-shell{max-width:1390px;margin:auto;padding:28px 44px 25px}
+.nft-room button,.nft-room select{font:inherit}
+.nft-room button{cursor:pointer}
+.nft-room button:disabled{cursor:default;opacity:.5}
+.nft-room button:focus-visible,.nft-room a:focus-visible,.nft-room select:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.nft-room a{color:var(--accent)}
+.nft-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:23px;border-bottom:1px solid var(--glass-edge);font-size:12px;letter-spacing:2px}
+.nft-header span{color:var(--ink-dim);font-size:9px}
+.nft-header button{border:1px solid var(--glass-edge);background:transparent;color:var(--ink);padding:8px 13px;border-radius:5px;font-size:10px}
+.nft-hero{display:grid;grid-template-columns:1.15fr 1fr;gap:60px;align-items:center;padding:56px 0 54px}
+.nft-eyebrow{font-size:10px;letter-spacing:2px;color:var(--ink-dim)}
+.nft-copy h1{font:700 clamp(38px,4.7vw,68px)/1.04 var(--mono);letter-spacing:-2px;margin:20px 0 24px}
+.nft-copy h1 em{color:var(--accent);font-weight:700;font-style:normal}
+.nft-copy>p{color:var(--ink-dim);font-size:13px;line-height:1.9}
+.nft-chips{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0}
+.nft-chips span{border:1px solid var(--glass-edge);border-radius:4px;font-size:8px;letter-spacing:1px;padding:5px 9px;color:var(--ink)}
+.nft-feature{width:100%;max-width:430px;justify-self:center;position:relative;transform:none}
+.nft-feature img{display:block;width:100%;border-radius:10px;box-shadow:0 20px 60px #0006}
+.nft-feature>span{display:block;text-align:center;font-size:8px;letter-spacing:2px;color:var(--ink-dim);padding:16px 0}
+.nft-mint-panel{border:1px solid var(--glass-edge);background:var(--glass);border-radius:10px;padding:20px 22px;max-width:540px}
+.nft-mint-panel h2{font:600 24px/1.25 var(--mono);margin:10px 0}
+.nft-mint-panel p{color:var(--ink-dim);font-size:11px;line-height:1.8}
+.nft-primary{display:block;width:100%;border:0;background:var(--accent);color:var(--bg-deep);font-weight:600!important;border-radius:5px;padding:14px 10px;font-size:11px!important;margin-top:16px}
+.nft-primary:hover:not(:disabled){background:var(--accent)}
+.nft-small{font-size:9px!important;color:var(--ink-dim)!important;margin-bottom:0}
+.nft-gallery-heading{display:flex;align-items:end;justify-content:space-between;gap:20px;padding:30px 0 24px;border-top:1px solid var(--glass-edge)}
+.nft-gallery-heading h2{font:600 33px/1.2 var(--mono);margin:10px 0 0}
+.nft-filters{display:flex;gap:6px}
+.nft-filters button{border:1px solid var(--glass-edge);background:transparent;color:var(--ink-dim);padding:8px 12px;border-radius:5px;font-size:9px}
+.nft-filters button[aria-pressed=true]{background:var(--accent);color:var(--bg-deep);border-color:var(--accent)}
+.nft-gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:19px 16px}
+.nft-card{min-width:0;text-align:left;padding:0;border:1px solid var(--glass-edge);background:var(--glass);color:var(--ink);border-radius:9px;overflow:hidden}
+.nft-card:hover{border-color:var(--accent)}
+.nft-card>img{display:block;width:100%;height:auto;aspect-ratio:4/5}
+.nft-card>div{padding:11px 12px 0;display:flex;justify-content:space-between;gap:8px;letter-spacing:1px;font-size:10px}
+.nft-card>div span{color:var(--ink-dim)}
+.nft-card>p{font-size:8px;color:var(--ink-dim);margin:5px 12px 13px}
+.nft-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:9px;color:var(--ink-dim);margin-top:30px;padding-top:20px;border-top:1px solid var(--glass-edge)}
+.nft-mint-count{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.nft-mint-count strong{font-size:28px;font-weight:600}
+.nft-mint-count small{font-size:12px;color:var(--ink-dim)}
+.nft-mint-count>span{font-size:9px;color:var(--accent)}
+.nft-progress{height:4px;background:var(--glass-edge);margin-top:9px;border-radius:4px;overflow:hidden}
+.nft-progress span{display:block;height:100%;background:var(--accent)}
+.nft-rule{font-size:10px!important}
+.nft-wallet-label{display:block;font-size:10px;color:var(--ink-dim)}
+.nft-wallet-label select{display:block;background:var(--bg);border:1px solid var(--glass-edge);border-radius:4px;color:var(--ink);width:100%;padding:7px;margin-top:5px}
+.nft-account{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;color:var(--ink-dim)}
+.nft-account button,.nft-pending button{background:transparent;border:1px solid var(--glass-edge);border-radius:4px;color:var(--accent);font-size:9px;padding:5px 8px}
+.nft-error{color:var(--down)!important;overflow-wrap:anywhere}
+.nft-contract{display:block;font-size:9px;margin-top:18px;overflow-wrap:anywhere}
+.nft-success{border:1px solid var(--glass-edge);background:var(--glass);padding:12px;margin-top:14px;border-radius:5px;color:var(--accent)}
+.nft-success strong,.nft-success a{display:block;font-size:11px}
+.nft-pending{border-top:1px solid var(--glass-edge);padding-top:6px}
+.nft-pending>a{font-size:10px;margin-right:12px}
+.nft-pending button{margin-top:8px}
+@media(max-width:1000px){.nft-shell{padding:22px 25px}
+.nft-hero{gap:25px}
+.nft-gallery{grid-template-columns:repeat(4,minmax(0,1fr))}
+.nft-copy h1{font-size:48px}
+.nft-mint-panel{padding:18px}
+.nft-header{font-size:10px}
+.nft-header span{display:block;font-size:8px}}
+@media(max-width:700px){.nft-shell{padding:18px 15px}
+.nft-hero{grid-template-columns:minmax(0,1fr);padding:32px 0;gap:24px}
+.nft-copy h1{font-size:46px;margin-top:16px}
+.nft-copy>p{font-size:11px}
+.nft-feature{max-width:290px;transform:none}
+.nft-mint-panel{max-width:none}
+.nft-gallery-heading{flex-wrap:wrap;gap:18px}
+.nft-gallery-heading h2{font-size:29px}
+.nft-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 10px}
+.nft-eyebrow{font-size:8px}
+.nft-card>div{padding:8px 9px 0;font-size:9px}
+.nft-card>p{margin:5px 9px 10px;font-size:7px}
+.nft-gallery-heading{padding-top:25px}
+.nft-footer{font-size:8px}}

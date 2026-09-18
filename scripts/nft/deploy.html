@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>First Residents · local deployment</title>
+<style>
+body{max-width:760px;margin:50px auto;padding:24px;background:#151206;color:#f2efe0;font:14px/1.6 "JetBrains Mono",ui-monospace,monospace}h1{font:700 clamp(28px,6vw,44px)/1.15 "JetBrains Mono",ui-monospace,monospace}button{font:inherit;color:#151206;padding:14px 22px;border:0;border-radius:5px;background:#ccff00;margin:8px 8px 8px 0;cursor:pointer}button:disabled{opacity:.4}pre{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #4a5122;padding:18px}a{color:#ccff00}
+</style>
+<h1>Deploy First Residents</h1><p id="network">Loading local artifact…</p>
+<p>30 tokens. 15 flies + 15 frogs. Free mint, one lifetime mint per address. Fully on-chain artwork. No contract owner or price controls.</p>
+<p>Deployment creates a permanent contract and immediately opens its public mint. The deploying wallet pays deployment gas. The game remains in preview until its public configuration is activated.</p>
+<button id="connect" disabled>Connect browser wallet</button><button id="deploy" disabled>Deploy collection</button><pre id="status"></pre><div id="receipt"></div>
+<script type="module">
+const config = await (await fetch('/artifact')).json();
+const status = document.querySelector('#status'), connect = document.querySelector('#connect'), deploy = document.querySelector('#deploy'), receipt = document.querySelector('#receipt');
+let account, hash;
+const wallet = window.ethereum, chainHex = '0x' + config.chain.id.toString(16);
+const say = text => { status.textContent = text; };
+document.querySelector('#network').textContent = 'Local release tool · ' + config.chain.name + ' (' + config.chain.id + ')';
+say('Expected runtime hash: ' + config.runtimeHash);
+connect.disabled = false;
+connect.onclick = async () => {
+  try {
+    if (!wallet) throw Error('Open this page in a browser with an Ethereum wallet.');
+    connect.disabled = true;
+    [account] = await wallet.request({method:'eth_requestAccounts'});
+    if (!/^0x[0-9a-f]{40}$/i.test(account)) throw Error('No valid account selected.');
+    try { await wallet.request({method:'wallet_switchEthereumChain',params:[{chainId:chainHex}]}); }
+    catch(e) {
+      if (e.code !== 4902) throw e;
+      await wallet.request({method:'wallet_addEthereumChain',params:[{chainId:chainHex,chainName:config.chain.name,nativeCurrency:config.chain.nativeCurrency,rpcUrls:config.chain.rpcUrls.default.http,blockExplorerUrls:[config.chain.blockExplorers.default.url]}]});
+      await wallet.request({method:'wallet_switchEthereumChain',params:[{chainId:chainHex}]});
+    }
+    if (Number(await wallet.request({method:'eth_chainId'})) !== config.chain.id) throw Error('Wrong network.');
+    const gas = await wallet.request({method:'eth_estimateGas',params:[{from:account,data:config.bytecode,value:'0x0'}]});
+    const price = await wallet.request({method:'eth_gasPrice'});
+    say('Account: ' + account + '\nNetwork: ' + config.chain.name + '\nEstimated gas: ' + BigInt(gas) + '\nCurrent gas price: ' + BigInt(price) + ' wei\nApproximate fee: ' + Number(BigInt(gas)*BigInt(price))/1e18 + ' ETH\nReview the final fee in your wallet.');
+    deploy.disabled = false;
+  } catch(e) { say(e.message ?? String(e)); }
+  finally { connect.disabled = false; }
+};
+deploy.onclick = async () => {
+  deploy.disabled = true; connect.disabled = true;
+  try {
+    const latest = await (await fetch('/artifact', {cache:'no-store'})).json();
+    if (latest.bytecode !== config.bytecode || latest.chain.id !== config.chain.id) throw Error('The reviewed artifact or network changed. Reload this page before deploying.');
+    const current = await wallet.request({method:'eth_accounts'});
+    if (current[0]?.toLowerCase() !== account?.toLowerCase()) throw Error('Account changed. Connect again.');
+    if (Number(await wallet.request({method:'eth_chainId'})) !== config.chain.id) throw Error('Network changed. Connect again.');
+    hash = await wallet.request({method:'eth_sendTransaction',params:[{from:account,chainId:chainHex,data:config.bytecode,value:'0x0'}]});
+    if (!/^0x[0-9a-f]{64}$/i.test(hash)) throw Error('No transaction hash. Check wallet activity before trying again.');
+    say('Submitted. Transaction: ' + hash + '\nWaiting for confirmation. Do not deploy again.');
+    const link = document.createElement('a');
+    link.href = config.chain.blockExplorers.default.url + '/tx/' + hash;
+    link.target = '_blank'; link.rel = 'noreferrer'; link.textContent = 'View deployment transaction'; receipt.replaceChildren(link);
+    for (let i = 0; i < 120; i++) {
+      if (Number(await wallet.request({method:'eth_chainId'})) !== config.chain.id) throw Error('Network changed. Check the submitted transaction in the explorer.');
+      const tx = await wallet.request({method:'eth_getTransactionReceipt',params:[hash]});
+      if (tx) {
+        if (tx.status !== '0x1' || !tx.contractAddress) throw Error('Deployment reverted. Check the explorer.');
+        say('Deployed contract: ' + tx.contractAddress + '\nTransaction: ' + hash + '\nNext: verify source in Blockscout, then run npm run nft:activate -- ' + hash + (config.chain.id === 46630 ? ' --testnet' : ''));
+        return;
+      }
+      await new Promise(r => setTimeout(r,2000));
+    }
+    throw Error('Confirmation timeout. Check the existing transaction in the explorer.');
+  } catch(e) { say((hash ? 'Submitted transaction: '+hash+'\n' : '') + (e.message ?? String(e))); }
+  finally { connect.disabled = Boolean(hash); }
+};
+</script>
+</html>

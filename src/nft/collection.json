@@ -1,0 +1,962 @@
+[
+  {
+    "id": 1,
+    "name": "VECTOR / First Residents #1",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "VECTOR"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 1
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Sly"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "RIPPLE / First Residents #2",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "RIPPLE"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 2
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Sly"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "BYTE / First Residents #3",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "BYTE"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 3
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Bold"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "LEAP / First Residents #4",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "LEAP"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 4
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Bold"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "ZIP / First Residents #5",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "ZIP"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 5
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Chill"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "DEPTH / First Residents #6",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "DEPTH"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 6
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Chill"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "name": "PIXEL / First Residents #7",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "PIXEL"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 7
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Wild"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "MOSS / First Residents #8",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "MOSS"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 8
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Wild"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "name": "GLITCH / First Residents #9",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "GLITCH"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 9
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Focused"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "name": "PEBBLE / First Residents #10",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Spectacles"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "PEBBLE"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 10
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Focused"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "name": "PATCH / First Residents #11",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "PATCH"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 11
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Sly"
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "name": "REED / First Residents #12",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "REED"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 12
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Sly"
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "name": "ECHO / First Residents #13",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "ECHO"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 13
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Bold"
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "name": "DRIFT / First Residents #14",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "DRIFT"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 14
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Bold"
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "name": "PULSE / First Residents #15",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "PULSE"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 15
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Chill"
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "name": "FERN / First Residents #16",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "FERN"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 16
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Chill"
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "name": "QUARK / First Residents #17",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "QUARK"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 17
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Wild"
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "name": "DEW / First Residents #18",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "DEW"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 18
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Wild"
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "name": "SPARK / First Residents #19",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "SPARK"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 19
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Focused"
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "name": "BROOK / First Residents #20",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Visor"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "BROOK"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 20
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Focused"
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "name": "LOOP / First Residents #21",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "LOOP"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 21
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Sly"
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "name": "LAGOON / First Residents #22",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "LAGOON"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 22
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Sly"
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "name": "TRACE / First Residents #23",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "TRACE"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 23
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Bold"
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "name": "LOTUS / First Residents #24",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "LOTUS"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 24
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Bold"
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "name": "NOVA / First Residents #25",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "NOVA"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 25
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Chill"
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "name": "CLOVER / First Residents #26",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "CLOVER"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 26
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Chill"
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "name": "ORBIT / First Residents #27",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "ORBIT"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 27
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Wild"
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "name": "MIST / First Residents #28",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "MIST"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 28
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Wild"
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "name": "FLUX / First Residents #29",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Fly"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "FLUX"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 29
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Focused"
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "name": "POND / First Residents #30",
+    "description": "An original DEGEN VILLAGE bot PFP skin. 30 black-and-lime mascot emblems: 15 flies and 15 frogs. Free mint, network gas only. Cosmetic profile avatar; no trading advantage. Artwork and metadata live entirely on-chain.",
+    "attributes": [
+      {
+        "trait_type": "Species",
+        "value": "Frog"
+      },
+      {
+        "trait_type": "Palette",
+        "value": "Black / Lime"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Headphones"
+      },
+      {
+        "trait_type": "Resident",
+        "value": "POND"
+      },
+      {
+        "display_type": "number",
+        "trait_type": "Edition",
+        "value": 30
+      },
+      {
+        "trait_type": "Expression",
+        "value": "Focused"
+      }
+    ]
+  }
+]
